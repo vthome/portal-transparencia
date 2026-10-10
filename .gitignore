@@ -1,0 +1,30 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Variáveis de ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# VS Code - configurações locais
+.vscode/
+
+# Streamlit - credenciais
+.streamlit/secrets.toml
+
+# Dados coletados e arquivos temporários
+data/raw/
+data/processed/
+data/downloads/
+*.log
+
+# Modelos e artefatos locais
+models/
+artifacts/
