@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=8.2
+reportlab>=4.2            # gera PDFs de teste
+ruff>=0.5

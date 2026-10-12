@@ -1,11 +1,22 @@
 -- =====================================================================
--- Monitor de Conformidade de Portais da Transparência — schema v0.1
+-- Monitor de Conformidade de Portais da Transparência — schema v0.2
 -- Rodar inteiro no Supabase: SQL Editor > New query > colar > Run.
--- Idempotente: pode ser executado de novo sem erro.
+-- Idempotente: pode ser executado de novo sem erro e sem apagar dados.
+--
+-- v0.1  base: catálogo, execução, coleta, conclusão, views, segurança, bucket
+-- v0.2  seção 6.1: colunas que a Camada 1 (coleta) grava + views de monitoramento.
+--       Quem já rodou a v0.1 só precisa rodar este arquivo de novo.
+--
+-- Também roda em Postgres puro com pgvector (CI): os trechos exclusivos do
+-- Supabase (roles anon/authenticated, storage.buckets) são condicionais.
 -- =====================================================================
 
 -- ---------- 1. Extensões ----------
+create schema if not exists extensions;                            -- já existe no Supabase
 create extension if not exists vector     with schema extensions;  -- pgvector (embeddings)
+-- Se o pgvector já estava habilitado em outro schema (ex.: public), o comando acima não faz
+-- nada e a extensão continua lá. Por isso, abaixo, `vector` e `vector_cosine_ops` são
+-- referenciados SEM schema: o search_path (monitor, public, extensions) encontra os dois casos.
 create extension if not exists pg_trgm    with schema extensions;  -- busca fuzzy por texto
 create extension if not exists "uuid-ossp" with schema extensions;
 
@@ -29,11 +40,18 @@ do $$ begin
     ('regra', 'embedding', 'llm', 'humano', 'pendente');
 exception when duplicate_object then null; end $$;
 
+-- v0.2: resultado da coleta de uma página. Tudo que não é 'ok'/'nao_modificado'
+-- vira 'nao_verificavel' na Camada 2 — falha do robô nunca é falha do ente.
+do $$ begin
+  create type monitor.status_coleta as enum
+    ('ok', 'vazio', 'soft404', 'erro', 'bloqueado_robots', 'nao_modificado');
+exception when duplicate_object then null; end $$;
+
 -- ---------- 3. Catálogo ----------
 create table if not exists monitor.entity (
   id              bigint generated always as identity primary key,
-  slug            text unique not null,               -- ex.: 'pm-marica'
-  nome            text not null,                      -- 'Prefeitura Municipal de Maricá'
+  slug            text unique not null,               -- = id do municipios.yaml, ex.: 'rj-marica'
+  nome            text not null,
   municipio       text not null,
   cod_ibge        char(7),
   uf              char(2) not null default 'RJ',
@@ -52,7 +70,7 @@ create table if not exists monitor.entity_url (
   url             text not null,
   plataforma      text,                               -- 'geosiap', 'betha', 'ecidade', 'wordpress', ...
   respeita_robots boolean not null default true,      -- override documentado no YAML
-  fonte           text,                               -- de onde veio a URL
+  fonte           text,                               -- 'config' (YAML) ou 'descoberta' (capa do site)
   valido_de       timestamptz not null default now(),
   valido_ate      timestamptz,                        -- null = vigente
   unique (entity_id, tipo, url, valido_de)
@@ -61,24 +79,24 @@ create index if not exists ix_entity_url_vigente on monitor.entity_url (entity_i
 
 create table if not exists monitor.checklist_version (
   id              bigint generated always as identity primary key,
-  nome            text not null unique,               -- 'checklistPortalTransp v1'
+  nome            text not null unique,
   publicado_em    date not null default current_date,
-  sha256          text not null                       -- hash do criteria.yaml
+  sha256          text not null
 );
 
 create table if not exists monitor.criterion (
   id                    bigint generated always as identity primary key,
   checklist_version_id  bigint not null references monitor.checklist_version(id),
-  codigo                text not null,                -- '4.1'
-  bloco                 text not null,                -- 'DESPESA'
-  dimensao              text not null,                -- uma das 5 dimensões do score
+  codigo                text not null,
+  bloco                 text not null,
+  dimensao              text not null,
   matriz                text not null check (matriz in ('comum','executivo')),
   texto                 text not null,
   fundamentacao         text,
   peso                  smallint not null check (peso in (1,2,3)),
   essencial             boolean not null default false,
   aplica_a              text[] not null default '{comum}',
-  verificador           text not null,                -- 'structured_fields', ...
+  verificador           text not null,
   params                jsonb not null default '{}',
   onda                  smallint check (onda between 1 and 4),
   unique (checklist_version_id, codigo)
@@ -89,7 +107,7 @@ create table if not exists monitor.run (
   id              bigint generated always as identity primary key,
   iniciado_em     timestamptz not null default now(),
   finalizado_em   timestamptz,
-  gatilho         text not null default 'manual',     -- 'manual', 'cron', 'api'
+  gatilho         text not null default 'manual',     -- 'manual', 'agendado', 'reprocessamento'
   engine_version  text not null,
   git_sha         text,
   status          monitor.status_execucao not null default 'executando',
@@ -113,7 +131,6 @@ create table if not exists monitor.crawl_job (
   finalizado_em   timestamptz,
   unique (run_id, entity_id)
 );
--- fila simples: worker pega com SELECT ... FOR UPDATE SKIP LOCKED
 create index if not exists ix_crawl_job_fila on monitor.crawl_job (status, run_id) where status = 'pendente';
 
 create table if not exists monitor.page_snapshot (
@@ -121,16 +138,16 @@ create table if not exists monitor.page_snapshot (
   crawl_job_id    bigint not null references monitor.crawl_job(id) on delete cascade,
   entity_id       bigint not null references monitor.entity(id),
   url             text not null,
-  url_final       text,                               -- após redirecionamentos
+  url_final       text,
   http_status     smallint,
-  content_hash    char(64),                           -- sha256 do HTML normalizado
+  content_hash    char(64),
   titulo          text,
   renderizado_js  boolean not null default false,
   profundidade    smallint not null default 0,
-  storage_path    text,                               -- snapshots/html/<sha256>.html.gz
-  screenshot_path text,                               -- snapshots/png/<sha256>.png
+  storage_path    text,
+  screenshot_path text,
   texto           text,                               -- texto visível extraído
-  links           jsonb,                              -- [{href, texto}]
+  links           jsonb,                              -- [{url, texto, arquivo, na_capa_topo}]
   coletado_em     timestamptz not null default now()
 );
 create index if not exists ix_snapshot_job      on monitor.page_snapshot (crawl_job_id);
@@ -143,12 +160,12 @@ create table if not exists monitor.file_artifact (
   page_snapshot_id  bigint not null references monitor.page_snapshot(id) on delete cascade,
   url               text not null,
   mime              text,
-  extensao          text,                             -- 'pdf', 'csv', 'xlsx', ...
+  extensao          text,
   sha256            char(64),
   tamanho           bigint,
-  storage_path      text,                             -- snapshots/files/<sha256>.<ext>
+  storage_path      text,
   texto_extraido    text,
-  metadados         jsonb,                            -- tipo de documento, exercício, período...
+  metadados         jsonb,
   coletado_em       timestamptz not null default now()
 );
 create index if not exists ix_file_sha on monitor.file_artifact (sha256);
@@ -162,11 +179,11 @@ create table if not exists monitor.chunk (
   ordem             integer not null default 0,
   texto             text not null,
   modelo            text not null,
-  embedding         extensions.vector(512),
+  embedding         vector(512),
   check (page_snapshot_id is not null or file_artifact_id is not null)
 );
 create index if not exists ix_chunk_embedding on monitor.chunk
-  using hnsw (embedding extensions.vector_cosine_ops);
+  using hnsw (embedding vector_cosine_ops);
 
 -- ---------- 5. Conclusão ----------
 create table if not exists monitor.evaluation (
@@ -174,13 +191,13 @@ create table if not exists monitor.evaluation (
   run_id                bigint not null references monitor.run(id) on delete cascade,
   entity_id             bigint not null references monitor.entity(id),
   checklist_version_id  bigint not null references monitor.checklist_version(id),
-  score                 numeric(5,2),                 -- 0–100
-  score_min             numeric(5,2),                 -- não verificáveis = 0
-  score_max             numeric(5,2),                 -- não verificáveis = 1
-  cobertura             numeric(5,2),                 -- % do peso aplicável verificado
+  score                 numeric(5,2),
+  score_min             numeric(5,2),
+  score_max             numeric(5,2),
+  cobertura             numeric(5,2),
   essenciais_ok         boolean,
   classificacao         text,
-  scores_bloco          jsonb,                        -- {"DESPESA": 81.2, ...}
+  scores_bloco          jsonb,
   pesos_usados          jsonb,
   avaliado_em           timestamptz not null default now(),
   unique (run_id, entity_id)
@@ -197,7 +214,7 @@ create table if not exists monitor.criterion_result (
   metodo           monitor.metodo_avaliacao not null,
   checker_version  text not null,
   justificativa    text,
-  reutilizado_de   bigint references monitor.criterion_result(id),  -- cache: conteúdo não mudou
+  reutilizado_de   bigint references monitor.criterion_result(id),
   unique (evaluation_id, criterion_id)
 );
 create index if not exists ix_result_criterion on monitor.criterion_result (criterion_id);
@@ -206,7 +223,7 @@ create index if not exists ix_result_revisao   on monitor.criterion_result (conf
 create table if not exists monitor.evidence (
   id                   bigint generated always as identity primary key,
   criterion_result_id  bigint not null references monitor.criterion_result(id) on delete cascade,
-  tipo                 text not null,   -- 'link','trecho','tabela','arquivo','formulario','screenshot','trilha','externo'
+  tipo                 text not null,
   url                  text,
   page_snapshot_id     bigint references monitor.page_snapshot(id),
   file_artifact_id     bigint references monitor.file_artifact(id),
@@ -226,14 +243,13 @@ create table if not exists monitor.human_review (
   revisado_em          timestamptz not null default now()
 );
 
--- Rótulos externos (PNTP / Radar da Transparência) para validação do motor
 create table if not exists monitor.ground_truth (
   id             bigint generated always as identity primary key,
   entity_id      bigint not null references monitor.entity(id),
-  codigo         text not null,          -- código do quesito no checklist
-  fonte          text not null,          -- 'pntp_2025', 'manual'
+  codigo         text not null,
+  fonte          text not null,
   status         monitor.status_criterio not null,
-  referencia     text,                   -- id do critério na fonte original
+  referencia     text,
   observado_em   date,
   unique (entity_id, codigo, fonte)
 );
@@ -244,7 +260,6 @@ select distinct on (e.entity_id) e.*
 from monitor.evaluation e
 order by e.entity_id, e.avaliado_em desc;
 
--- Linha do tempo por (entidade, critério): marca correções e regressões
 create or replace view monitor.v_criterion_timeline as
 with r as (
   select ev.entity_id, c.codigo, ev.avaliado_em, cr.status, cr.nota, cr.confianca,
@@ -263,6 +278,80 @@ select *,
   end as evento
 from r;
 
+-- =====================================================================
+-- 6.1 v0.2 — Camada 1 (coleta): colunas que o pipeline grava
+--    `add column if not exists` → seguro sobre a v0.1 já aplicada.
+-- =====================================================================
+
+alter table monitor.entity
+  add column if not exists atualizado_em timestamptz not null default now();
+
+alter table monitor.entity_url
+  add column if not exists dominio_gov boolean,                         -- termina em .gov.br? (quesito 1.1)
+  add column if not exists evidencia   jsonb not null default '{}';     -- texto do link, página de origem, pontos
+-- uma URL vigente por (ente, tipo, url): permite atualizar sem duplicar a cada rodada
+create unique index if not exists ux_entity_url_vigente_url
+  on monitor.entity_url (entity_id, tipo, url) where valido_ate is null;
+
+alter table monitor.run
+  add column if not exists parametros jsonb not null default '{}';      -- orçamento, entes, render...
+
+alter table monitor.crawl_job
+  add column if not exists plataforma_detectada text,
+  add column if not exists fingerprint          jsonb not null default '{}',   -- por host
+  add column if not exists requisicoes          integer not null default 0,
+  add column if not exists renderizacoes        integer not null default 0,
+  add column if not exists paginas_inalteradas  integer not null default 0,
+  add column if not exists bloqueios_robots     integer not null default 0,
+  add column if not exists secoes_encontradas   text[] not null default '{}',
+  add column if not exists secoes_ausentes      text[] not null default '{}';
+
+alter table monitor.page_snapshot
+  add column if not exists content_type    text,
+  add column if not exists tamanho         bigint,
+  add column if not exists coleta_status   monitor.status_coleta,
+  add column if not exists erro            text,
+  add column if not exists robots_override boolean not null default false,
+  add column if not exists trilha          jsonb not null default '[]',  -- cliques desde a capa
+  add column if not exists secoes          text[] not null default '{}', -- seções do secoes.yaml
+  add column if not exists extraido        jsonb not null default '{}',  -- tabelas, forms, datas, breadcrumbs...
+  add column if not exists etag            text,
+  add column if not exists last_modified   text,
+  add column if not exists inalterado      boolean not null default false;
+create index if not exists ix_snapshot_status on monitor.page_snapshot (coleta_status);
+create index if not exists ix_snapshot_secoes on monitor.page_snapshot using gin (secoes);
+comment on column monitor.page_snapshot.content_hash is 'sha256 do corpo bruto (= chave no Storage)';
+comment on column monitor.page_snapshot.extraido is 'saída de parse_html sem texto/links (que têm colunas próprias); texto_hash detecta mudança';
+
+alter table monitor.file_artifact
+  add column if not exists entity_id   bigint references monitor.entity(id),
+  add column if not exists texto_link  text,
+  add column if not exists paginas     integer,
+  add column if not exists secoes      text[] not null default '{}',
+  add column if not exists erro        text;
+create index if not exists ix_file_entity_url on monitor.file_artifact (entity_id, url, coletado_em desc);
+
+-- Views de monitoramento da coleta (página "monitoramento" do dashboard)
+create or replace view monitor.v_ultima_coleta as
+select distinct on (j.entity_id)
+       j.entity_id, e.slug as entity_slug, e.nome, j.run_id, j.status, j.plataforma_detectada,
+       j.paginas, j.arquivos, j.requisicoes, j.renderizacoes, j.bloqueios_robots,
+       j.secoes_encontradas, j.secoes_ausentes, j.segundos, j.erro, j.finalizado_em
+from monitor.crawl_job j join monitor.entity e on e.id = j.entity_id
+order by j.entity_id, j.iniciado_em desc nulls last;
+
+create or replace view monitor.v_saude_rodadas as
+select r.id as run_id, r.gatilho, r.status, r.iniciado_em, r.finalizado_em,
+       count(j.id)                                     as entes,
+       count(*) filter (where j.status = 'concluido')  as concluidos,
+       count(*) filter (where j.status = 'parcial')    as parciais,
+       count(*) filter (where j.status = 'falhou')     as falhas,
+       coalesce(sum(j.paginas), 0)  as paginas,
+       coalesce(sum(j.arquivos), 0) as arquivos,
+       coalesce(sum(j.bytes), 0)    as bytes
+from monitor.run r left join monitor.crawl_job j on j.run_id = r.id
+group by r.id;
+
 -- ---------- 7. Segurança ----------
 -- RLS ligado em tudo e SEM políticas: só o backend (conexão Postgres / chave secreta)
 -- acessa. O dashboard lê pela FastAPI, nunca direto do banco.
@@ -274,10 +363,19 @@ begin
   end loop;
 end $$;
 
-revoke all on schema monitor from anon, authenticated;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on schema monitor from anon, authenticated;
+  end if;
+end $$;
 
 -- ---------- 8. Storage ----------
 -- Bucket privado para HTML, screenshots e arquivos (chave = sha256, deduplica entre rodadas).
-insert into storage.buckets (id, name, public, file_size_limit)
-values ('snapshots', 'snapshots', false, 52428800)   -- 50 MB, limite do plano Free
-on conflict (id) do nothing;
+-- Caminhos: html/<aa>/<sha256>.html · png/<aa>/<sha256>.png · files/<aa>/<sha256>.<ext>
+do $$ begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets (id, name, public, file_size_limit)
+    values ('snapshots', 'snapshots', false, 52428800)   -- 50 MB, limite do plano Free
+    on conflict (id) do nothing;
+  end if;
+end $$;
