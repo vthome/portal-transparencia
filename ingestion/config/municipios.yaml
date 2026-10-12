@@ -59,7 +59,9 @@ entes:
     codigo_ibge: "3301900"
     urls:
       site_oficial: https://site.ib.itaborai.rj.gov.br/
-      portal_transparencia: https://transparencia.ib.itaborai.rj.gov.br/
+#      portal_transparencia: https://transparencia.ib.itaborai.rj.gov.br/
+      portal_transparencia: https://transparencianovo.ib.itaborai.rj.gov.br/
+      ouvidoria: https://itaborai.supernova.com.br:8446/md-sic-ouvidoria-mob/pages/protected/home/home.xhtml
     robots_override:
       ativo: false
       justificativa: "robots.txt bloqueia o portal; decidir se a LAI justifica override"
@@ -71,6 +73,7 @@ entes:
     urls:
       site_oficial: https://www.japeri.rj.gov.br/
       portal_transparencia: https://japeri.geosiap.net.br/portal-transparencia/home
+      ouvidoria: https://falabr.cgu.gov.br/v2/?uf=rj&municipio=japeri
       esic: https://falabr.cgu.gov.br/web/rj/japeri/
     robots_override:
       ativo: false
@@ -83,6 +86,7 @@ entes:
     urls:
       site_oficial: https://www.prefeituracachoeiras.com/   # domínio .com (Wix) — confirmar se é o oficial
       # portal_transparencia: Betha Cloud — URL do ente a confirmar; a descoberta procura na capa
+      portal_transparencia: https://transparencia.betha.cloud/#/VZIcwd3tEQSz63QIK2HkQw==*
     robots_override:
       ativo: false
       justificativa: "robots.txt do domínio .rj.gov.br bloqueia; decidir override"

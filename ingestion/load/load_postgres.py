@@ -39,6 +39,19 @@ class Repository(Protocol):
     def save_file(self, page_id: str, entity_id: str, art: FileArtifact) -> str: ...
     def previous_page(self, entity_id: str, url: str) -> dict[str, Any] | None: ...
     def previous_file(self, entity_id: str, url: str) -> dict[str, Any] | None: ...
+    # leitura para relatório e reextração
+    def latest_run_id(self) -> str | None: ...
+    def run_jobs(self, run_id: str) -> list[dict[str, Any]]: ...
+    def run_snapshot_stats(self, run_id: str) -> list[dict[str, Any]]: ...
+    def run_top_erros(self, run_id: str, limite: int = 5) -> list[dict[str, Any]]: ...
+    def snapshots_para_reextrair(self, run_id: str, parser_version: int | None) -> list[dict[str, Any]]: ...
+    def atualizar_extracao(self, snapshot_id: str, coleta_status: str, titulo: str | None,
+                           secoes: list[str], extraido: dict[str, Any]) -> None: ...
+    def atualizar_secoes_job(self, job_id: str, encontradas: list[str], ausentes: list[str]) -> None: ...
+
+
+# Status que vêm de uma extração (podem mudar no reextract); os demais vêm da coleta
+STATUS_EXTRAIVEIS = ("ok", "vazio", "soft404")
 
 
 def _json_default(o: Any) -> Any:
@@ -141,6 +154,68 @@ class LocalRepository:
     def previous_page(self, entity_id, url):
         r = self._ultimo_page.get((entity_id, url))
         return {"texto_hash": (r.get("extraido") or {}).get("texto_hash"), "content_hash": r.get("content_hash")} if r else None
+
+    # ---- leitura
+
+    def latest_run_id(self):
+        runs = self.read("run")
+        return runs[-1]["id"] if runs else None
+
+    def _jobs(self, run_id):
+        return [j for j in self.read("crawl_job") if j["run_id"] == run_id]
+
+    def run_jobs(self, run_id):
+        nomes = {e["id"]: e.get("nome") for e in self.read("entity")}
+        out = []
+        for j in self._jobs(run_id):
+            out.append({"job_id": j["id"], "slug": j["entity_id"], "nome": nomes.get(j["entity_id"]),
+                        **{k: j.get(k) for k in ("status", "plataforma_detectada", "paginas", "arquivos",
+                                                 "requisicoes", "renderizacoes", "bloqueios_robots",
+                                                 "paginas_inalteradas", "secoes_encontradas",
+                                                 "secoes_ausentes", "duracao_s", "erro")}})
+        return out
+
+    def _snaps(self, run_id):
+        jobs = {j["id"]: j["entity_id"] for j in self._jobs(run_id)}
+        return [(jobs[p["crawl_job_id"]], p) for p in self.read("page_snapshot") if p["crawl_job_id"] in jobs]
+
+    def run_snapshot_stats(self, run_id):
+        cont: dict[tuple, dict] = {}
+        for slug, p in self._snaps(run_id):
+            k = (slug, p["coleta_status"])
+            c = cont.setdefault(k, {"slug": slug, "coleta_status": p["coleta_status"], "n": 0, "renderizados": 0})
+            c["n"] += 1
+            c["renderizados"] += 1 if p.get("renderizado_js") else 0
+        return sorted(cont.values(), key=lambda r: (r["slug"], r["coleta_status"]))
+
+    def run_top_erros(self, run_id, limite=5):
+        cont: dict[tuple, int] = {}
+        for slug, p in self._snaps(run_id):
+            if p.get("erro"):
+                k = (slug, p["erro"].split(":")[0])
+                cont[k] = cont.get(k, 0) + 1
+        rows = [{"slug": k[0], "erro": k[1], "n": n} for k, n in cont.items()]
+        return sorted(rows, key=lambda r: (r["slug"], -r["n"]))
+
+    def snapshots_para_reextrair(self, run_id, parser_version):
+        out = []
+        for slug, p in self._snaps(run_id):
+            ext = p.get("extraido") or {}
+            if p["coleta_status"] in STATUS_EXTRAIVEIS and p.get("storage_path") and \
+                    (parser_version is None or ext.get("parser_version") != parser_version):
+                out.append({"id": p["id"], "job_id": p["crawl_job_id"], "slug": slug, "url": p["url"],
+                            "url_final": p.get("url_final"), "http_status": p.get("http_status"),
+                            "storage_path": p["storage_path"], "coleta_status": p["coleta_status"],
+                            "secoes": p.get("secoes") or [], "extraido": ext})
+        return out
+
+    def atualizar_extracao(self, snapshot_id, coleta_status, titulo, secoes, extraido):
+        self._append("page_snapshot", {"_update": True, "id": snapshot_id, "coleta_status": coleta_status,
+                                       "titulo": titulo, "secoes": secoes, "extraido": extraido})
+
+    def atualizar_secoes_job(self, job_id, encontradas, ausentes):
+        self._append("crawl_job", {"_update": True, "id": job_id, "secoes_encontradas": encontradas,
+                                   "secoes_ausentes": ausentes})
 
     def previous_file(self, entity_id, url):
         r = self._ultimo_file.get((entity_id, url))
@@ -335,6 +410,73 @@ class PostgresRepository:
         return {"mime": row[0], "sha256": row[1], "tamanho": row[2], "storage_path": row[3], "paginas": row[4],
                 "texto_extraido": row[5], "metadados": meta, "etag": meta.get("etag"),
                 "last_modified": meta.get("last_modified")}
+
+    # ---------------------------------------------------------- leitura (relatório / reextração)
+
+    def _dicts(self, sql: str, params: tuple) -> list[dict[str, Any]]:
+        cur = self.conn.execute(sql, params)
+        cols = [d.name for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def latest_run_id(self):
+        rid = self._one("select id from monitor.run order by id desc limit 1", ())
+        return str(rid) if rid is not None else None
+
+    def run_jobs(self, run_id):
+        rows = self._dicts(
+            """select j.id::text as job_id, e.slug, e.nome, j.status::text as status, j.plataforma_detectada,
+                      j.paginas, j.arquivos, j.requisicoes, j.renderizacoes, j.bloqueios_robots,
+                      j.paginas_inalteradas, j.secoes_encontradas, j.secoes_ausentes,
+                      j.segundos::float as duracao_s, j.erro
+               from monitor.crawl_job j join monitor.entity e on e.id = j.entity_id
+               where j.run_id = %s order by e.slug""", (int(run_id),))
+        for r in rows:  # mesmo vocabulário do LocalRepository
+            r["status"] = {"executando": "em_execucao"}.get(r["status"], r["status"])
+        return rows
+
+    def run_snapshot_stats(self, run_id):
+        return self._dicts(
+            """select e.slug, p.coleta_status::text as coleta_status, count(*)::int as n,
+                      count(*) filter (where p.renderizado_js)::int as renderizados
+               from monitor.page_snapshot p join monitor.crawl_job j on j.id = p.crawl_job_id
+               join monitor.entity e on e.id = j.entity_id
+               where j.run_id = %s group by 1, 2 order by 1, 2""", (int(run_id),))
+
+    def run_top_erros(self, run_id, limite=5):
+        return self._dicts(
+            """select slug, erro, n from (
+                 select e.slug, split_part(p.erro, ':', 1) as erro, count(*)::int as n,
+                        row_number() over (partition by e.slug order by count(*) desc) as rk
+                 from monitor.page_snapshot p join monitor.crawl_job j on j.id = p.crawl_job_id
+                 join monitor.entity e on e.id = j.entity_id
+                 where j.run_id = %s and p.erro is not null group by 1, 2) t
+               where rk <= %s order by slug, n desc""", (int(run_id), limite))
+
+    def snapshots_para_reextrair(self, run_id, parser_version):
+        return self._dicts(
+            """select p.id::text as id, p.crawl_job_id::text as job_id, e.slug, p.url, p.url_final,
+                      p.http_status, p.storage_path, p.coleta_status::text as coleta_status, p.secoes, p.extraido
+               from monitor.page_snapshot p join monitor.crawl_job j on j.id = p.crawl_job_id
+               join monitor.entity e on e.id = j.entity_id
+               where j.run_id = %s and p.storage_path is not null
+                 and p.coleta_status in ('ok', 'vazio', 'soft404')
+                 and (%s::int is null or coalesce((p.extraido->>'parser_version')::int, 0) <> %s::int)
+               order by p.id""", (int(run_id), parser_version, parser_version))
+
+    def atualizar_extracao(self, snapshot_id, coleta_status, titulo, secoes, extraido):
+        extraido = dict(extraido)
+        texto = extraido.pop("texto", None)
+        links = extraido.pop("links", None)
+        self.conn.execute(
+            """update monitor.page_snapshot set coleta_status = %s::monitor.status_coleta, titulo = %s,
+                 secoes = %s, texto = %s, links = %s, extraido = %s where id = %s""",
+            (coleta_status, _sem_nul(titulo), secoes, _sem_nul(texto),
+             self._j(links) if links is not None else None, self._j(extraido), int(snapshot_id)))
+
+    def atualizar_secoes_job(self, job_id, encontradas, ausentes):
+        self.conn.execute(
+            "update monitor.crawl_job set secoes_encontradas = %s, secoes_ausentes = %s where id = %s",
+            (encontradas, ausentes, int(job_id)))
 
 
 def _sem_nul(o: Any) -> Any:

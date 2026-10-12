@@ -128,7 +128,8 @@ def parse_html(html: str, base_url: str) -> ParsedPage:
         atualiz += [d.isoformat() for d in parse_dates_br(m.group(2).replace(" ", "/"))]
     atualiz += [d.isoformat() for d in parse_dates_br(" ".join(
         re.findall(r"[Aa]tualizad[oa]s?\s+em:?\s*([0-9/.\-]{8,10})", texto)))]
-    exportacao = sorted({m.lower() for l in links for m in _EXPORT.findall(l.texto + " " + (l.arquivo or ""))})
+   # exportacao = sorted({m.lower() for l in links for m in _EXPORT.findall(l.texto + " " + (l.arquivo or ""))})
+    exportacao = sorted({m.lower() for link in links for m in _EXPORT.findall(link.texto + " " + (link.arquivo or ""))})
 
     return ParsedPage(
         titulo=titulo, h1=h1, headings=headings, texto=texto, idioma=idioma, meta=meta,
