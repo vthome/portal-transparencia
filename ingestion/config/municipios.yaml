@@ -83,7 +83,7 @@ entes:
     nome: Prefeitura Municipal de Cachoeiras de Macacu
     municipio: Cachoeiras de Macacu
     codigo_ibge: "3300803"
-    urls:       # portal_transparencia: Betha Cloud — URL do ente a confirmar; a descoberta procura na capa
+    urls: 
       site_oficial: https://www.prefeituracachoeiras.com/   # domínio .com (Wix) — confirmar se é o oficial
       portal_transparencia: https://transparencia.betha.cloud/#/VZIcwd3tEQSz63QIK2HkQw==*
     robots_override:
