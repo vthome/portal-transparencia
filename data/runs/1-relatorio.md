@@ -1,6 +1,6 @@
 # Relatório da coleta — rodada 1
-
-7 entes · 392 páginas · 122 arquivos · 592 requisições · 120 renderizações
+ 
+7 entes · 392 páginas · 122 arquivos · 592 requisições · 120 renderizações 
 
 ## Por ente
 
