@@ -1,5 +1,6 @@
 # Camada 1 — Coleta: spec, passo a passo e roteiro de testes
 
+
 Versão do motor: `coleta-0.1.0` · schema `monitor` v0.2 · 12/10/2026
 
 A Camada 1 transforma `municipios.yaml` em **snapshots imutáveis** no Supabase: páginas HTML (estáticas ou renderizadas), arquivos (PDF, CSV, XLS/XLSX, ODS, JSON) e o que foi extraído deles. Ela **não julga conformidade** — só registra o que existe, onde estava, como se chegou lá e se a coleta foi confiável. A Camada 2 lê esses snapshots e decide.

@@ -1,0 +1,40 @@
+{
+  "run_id": "9",
+  "status": "concluido",
+  "engine_version": "coleta-0.1.0",
+  "entes": {
+    "rj-duque-de-caxias": {
+      "status": "concluido",
+      "plataforma_detectada": null,
+      "paginas": 20,
+      "arquivos": 2,
+      "requisicoes": 27,
+      "renderizacoes": 10,
+      "bloqueios_robots": 0,
+      "secoes_encontradas": [
+        "acessibilidade",
+        "boas_praticas",
+        "contratos",
+        "despesa",
+        "institucional",
+        "licitacoes",
+        "obras",
+        "ouvidoria",
+        "pessoal",
+        "planejamento_contas",
+        "rreo",
+        "transferencias"
+      ],
+      "secoes_ausentes": [
+        "diarias",
+        "emendas",
+        "lgpd_digital",
+        "patrimonio",
+        "receita",
+        "sic"
+      ],
+      "duracao_s": 76.69,
+      "erro": null
+    }
+  }
+}

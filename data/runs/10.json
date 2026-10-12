@@ -1,0 +1,40 @@
+{
+  "run_id": "10",
+  "status": "concluido",
+  "engine_version": "coleta-0.1.0",
+  "entes": {
+    "rj-rio-de-janeiro": {
+      "status": "concluido",
+      "plataforma_detectada": "wordpress",
+      "paginas": 20,
+      "arquivos": 20,
+      "requisicoes": 48,
+      "renderizacoes": 4,
+      "bloqueios_robots": 0,
+      "secoes_encontradas": [
+        "boas_praticas",
+        "despesa",
+        "emendas",
+        "institucional",
+        "lgpd_digital",
+        "obras",
+        "ouvidoria",
+        "planejamento_contas",
+        "receita",
+        "sic"
+      ],
+      "secoes_ausentes": [
+        "acessibilidade",
+        "contratos",
+        "diarias",
+        "licitacoes",
+        "patrimonio",
+        "pessoal",
+        "rreo",
+        "transferencias"
+      ],
+      "duracao_s": 67.77,
+      "erro": null
+    }
+  }
+}

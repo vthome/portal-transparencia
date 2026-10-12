@@ -1,4 +1,5 @@
 """Testes de integração offline: crawler + pipeline sobre um município falso."""
+
 import io
 from dataclasses import replace
 

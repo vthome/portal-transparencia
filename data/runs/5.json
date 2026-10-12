@@ -1,0 +1,40 @@
+{
+  "run_id": "5",
+  "status": "concluido",
+  "engine_version": "coleta-0.1.0",
+  "entes": {
+    "rj-japeri": {
+      "status": "concluido",
+      "plataforma_detectada": "geosiap",
+      "paginas": 20,
+      "arquivos": 0,
+      "requisicoes": 35,
+      "renderizacoes": 6,
+      "bloqueios_robots": 0,
+      "secoes_encontradas": [
+        "boas_praticas",
+        "institucional",
+        "lgpd_digital",
+        "obras",
+        "ouvidoria",
+        "pessoal",
+        "sic"
+      ],
+      "secoes_ausentes": [
+        "acessibilidade",
+        "contratos",
+        "despesa",
+        "diarias",
+        "emendas",
+        "licitacoes",
+        "patrimonio",
+        "planejamento_contas",
+        "receita",
+        "rreo",
+        "transferencias"
+      ],
+      "duracao_s": 80.83,
+      "erro": null
+    }
+  }
+}

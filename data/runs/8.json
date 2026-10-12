@@ -1,0 +1,40 @@
+{
+  "run_id": "8",
+  "status": "concluido",
+  "engine_version": "coleta-0.1.0",
+  "entes": {
+    "rj-marica": {
+      "status": "concluido",
+      "plataforma_detectada": "ecidade",
+      "paginas": 20,
+      "arquivos": 30,
+      "requisicoes": 59,
+      "renderizacoes": 2,
+      "bloqueios_robots": 0,
+      "secoes_encontradas": [
+        "contratos",
+        "institucional",
+        "licitacoes",
+        "ouvidoria",
+        "pessoal",
+        "planejamento_contas",
+        "rreo",
+        "sic"
+      ],
+      "secoes_ausentes": [
+        "acessibilidade",
+        "boas_praticas",
+        "despesa",
+        "diarias",
+        "emendas",
+        "lgpd_digital",
+        "obras",
+        "patrimonio",
+        "receita",
+        "transferencias"
+      ],
+      "duracao_s": 83.03,
+      "erro": null
+    }
+  }
+}

@@ -7,6 +7,7 @@
 Gera data/runs/<run_id>-relatorio.md e imprime o mesmo conteúdo. O pipeline chama
 `gerar_relatorio` automaticamente ao final de cada rodada.
 """
+
 from __future__ import annotations
 
 import argparse
