@@ -1,0 +1,14 @@
+# --- Camada 1: coleta ---
+requests>=2.32
+beautifulsoup4>=4.12
+lxml>=5.2
+playwright>=1.45          # depois: python -m playwright install --with-deps chromium
+pdfplumber>=0.11
+pandas>=2.2
+openpyxl>=3.1             # .xlsx
+xlrd>=2.0                 # .xls legado
+odfpy>=1.4                # .ods
+pyyaml>=6.0
+pydantic>=2.7
+psycopg[binary]>=3.2
+python-dotenv>=1.0

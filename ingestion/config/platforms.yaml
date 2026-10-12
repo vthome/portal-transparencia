@@ -1,0 +1,82 @@
+# Fingerprints de plataforma. Cada sinal soma `peso`; a plataforma com maior soma
+# acima de `limiar` é a detectada. Um adaptador novo é, primeiro, uma entrada aqui.
+#
+# tipos de sinal:
+#   host:    regex sobre o host da URL final
+#   url:     regex sobre a URL final completa
+#   html:    regex (case-insensitive) sobre o HTML bruto
+#   header:  "Nome-Header: regex" sobre os cabeçalhos de resposta
+#   meta_generator: regex sobre <meta name="generator">
+#
+# Campos do adaptador (usados pelo crawler):
+#   requires_js:    força renderização com Playwright
+#   wait_selector:  seletor CSS que indica que a SPA terminou de carregar
+#   rotas_semente:  caminhos relativos ao portal que vale visitar logo no início
+#                   (só listar rotas confirmadas; deixar vazio quando não se sabe)
+
+limiar: 3
+
+plataformas:
+  geosiap:
+    descricao: GeoSiap (SaaS de gestão pública)
+    sinais:
+      - {tipo: host, valor: 'geosiap\.net\.br$', peso: 5}
+      - {tipo: html, valor: 'geosiap', peso: 2}
+    requires_js: false
+    rotas_semente: []
+
+  betha:
+    descricao: Betha Cloud — Portal da Transparência (SPA)
+    sinais:
+      - {tipo: host, valor: '(^|\.)betha\.cloud$', peso: 5}
+      - {tipo: html, valor: 'betha', peso: 1}
+    requires_js: true
+    wait_selector: "main, #app, app-root"
+    rotas_semente: []
+
+  ecidade:
+    descricao: Portal sobre dados do e-Cidade (DBSeller)
+    sinais:
+      - {tipo: html, valor: 'e-?cidade', peso: 3}
+      - {tipo: html, valor: 'dbseller', peso: 3}
+    requires_js: false
+    rotas_semente: []
+
+  wix:
+    descricao: Site em Wix
+    sinais:
+      - {tipo: html, valor: 'static\.wixstatic\.com|wix\.com', peso: 3}
+      - {tipo: header, valor: 'x-wix-request-id: .+', peso: 3}
+      - {tipo: meta_generator, valor: 'wix', peso: 3}
+    requires_js: true
+    wait_selector: "#SITE_CONTAINER"
+    rotas_semente: []
+
+  wordpress:
+    descricao: WordPress
+    sinais:
+      - {tipo: html, valor: '/wp-content/|/wp-includes/', peso: 3}
+      - {tipo: meta_generator, valor: 'wordpress', peso: 3}
+      - {tipo: header, valor: 'link: .*wp-json', peso: 2}
+    requires_js: false
+    rotas_semente: []
+
+  # `generica: true` = só vale se nenhum fornecedor específico passar do limiar
+  spa_angular:
+    descricao: SPA Angular genérica
+    generica: true
+    sinais:
+      - {tipo: html, valor: 'ng-version=|<app-root', peso: 3}
+    requires_js: true
+    wait_selector: "app-root *"
+    rotas_semente: []
+
+  spa_generica:
+    descricao: SPA React/Vue genérica (rota com hash ou div raiz vazia)
+    generica: true
+    sinais:
+      - {tipo: url, valor: '#!?/', peso: 3}
+      - {tipo: html, valor: '<div id="(root|app)">\s*</div>', peso: 3}
+      - {tipo: html, valor: 'data-v-[0-9a-f]{6,}|__NEXT_DATA__|__NUXT__', peso: 1}
+    requires_js: true
+    rotas_semente: []
