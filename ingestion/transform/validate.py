@@ -6,6 +6,7 @@ Dois papéis distintos:
 2. `classify_page`: decide se o que veio do servidor serve como evidência
    (ok / vazio / soft404). Uma página "Em construção" com HTTP 200 não pode virar "Atende".
 """
+
 from __future__ import annotations
 
 import re

@@ -1,0 +1,40 @@
+{
+  "run_id": "4",
+  "status": "concluido",
+  "engine_version": "coleta-0.1.0",
+  "entes": {
+    "rj-itaborai": {
+      "status": "concluido",
+      "plataforma_detectada": "wordpress",
+      "paginas": 20,
+      "arquivos": 30,
+      "requisicoes": 60,
+      "renderizacoes": 2,
+      "bloqueios_robots": 0,
+      "secoes_encontradas": [
+        "contratos",
+        "despesa",
+        "emendas",
+        "lgpd_digital",
+        "licitacoes",
+        "obras",
+        "ouvidoria",
+        "planejamento_contas",
+        "receita",
+        "rreo",
+        "sic",
+        "transferencias"
+      ],
+      "secoes_ausentes": [
+        "acessibilidade",
+        "boas_praticas",
+        "diarias",
+        "institucional",
+        "patrimonio",
+        "pessoal"
+      ],
+      "duracao_s": 101.45,
+      "erro": null
+    }
+  }
+}

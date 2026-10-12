@@ -4,6 +4,7 @@ O resultado (`ParsedPage.to_dict()`) vai para `page_snapshot.extraido` e é o in
 verificadores da Camada 2: links (navegação), tabelas (dados estruturados), formulários
 (busca, e-SIC), breadcrumbs e sinais de acessibilidade, datas (atualidade).
 """
+
 from __future__ import annotations
 
 import re

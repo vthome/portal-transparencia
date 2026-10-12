@@ -1,4 +1,5 @@
 """Configuração por variáveis de ambiente (12-factor). Nada de segredo em YAML."""
+
 from __future__ import annotations
 
 import os

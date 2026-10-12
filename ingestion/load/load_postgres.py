@@ -7,6 +7,7 @@
 Ambas são *append-only* para snapshots e arquivos: nada coletado é sobrescrito, o que
 garante a trilha de auditoria e permite reavaliar coletas antigas com regras novas.
 """
+
 from __future__ import annotations
 
 import json
