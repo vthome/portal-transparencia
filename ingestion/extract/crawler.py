@@ -32,17 +32,16 @@ from ingestion.models import (
     PageSnapshot,
 )
 from ingestion.settings import Settings, get_settings
+from ingestion.transform.extracao import extrair_pagina, relevancia
 from ingestion.transform.normalize import (
     extension_of,
-    find_terms,
     host_of,
-    normalize_text,
     normalize_url,
     registrable_domain,
 )
 from ingestion.transform.parse_files import parse_file
-from ingestion.transform.parse_html import Link, parse_html
-from ingestion.transform.validate import classify_page, load_platforms, load_secoes
+from ingestion.transform.parse_html import Link
+from ingestion.transform.validate import load_platforms, load_secoes
 
 log = logging.getLogger(__name__)
 
@@ -214,19 +213,16 @@ class Crawler:
             # a "página" é um documento: registra como arquivo de uma página-sentinela
             return self._arquivo_direto(item, res)
 
-        html = res.texto
-        parsed = parse_html(html, res.url_final or url)
-        status = classify_page(parsed.texto, parsed.titulo, res.status)
-        secoes = self._secoes_pagina(parsed, item, url)
+        # fase de extração (mesma função usada pelo ingestion.reextract)
+        ext_pag = extrair_pagina(res.texto, url, res.url_final or url, item.texto_link, self.secoes, res.status)
+        parsed, status, secoes = ext_pag.parsed, ext_pag.coleta_status, ext_pag.secoes
         for s in secoes:
             self.cobertura[s] += 1
-        texto_hash = hashlib.sha256(normalize_text(parsed.texto).encode()).hexdigest()
         prev = self.sink.previous_page(url)
-        inalterado = bool(prev and prev.get("texto_hash") == texto_hash)
+        inalterado = bool(prev and prev.get("texto_hash") == ext_pag.texto_hash)
         if inalterado:
             self.stats.paginas_inalteradas += 1
-        extraido = parsed.to_dict()
-        extraido["texto_hash"] = texto_hash
+        extraido = ext_pag.extraido
         if host_of(url) in self.fingerprints:
             extraido["fingerprint_host"] = self.fingerprints[host_of(url)].__dict__
 
@@ -252,15 +248,7 @@ class Crawler:
         return [s for s, n in self.cobertura.items() if n < teto]
 
     def _relevancia(self, texto: str, url: str, secoes: list[str]) -> tuple[float, list[str]]:
-        pts, hits = 0.0, []
-        for s in secoes:
-            termos = self.secoes[s]["termos"]
-            t = len(find_terms(texto, termos))
-            u = len(find_terms(url.replace("/", " ").replace("-", " ").replace("_", " "), termos))
-            if t or u:
-                hits.append(s)
-                pts += 3 * min(t, 2) + min(u, 2)
-        return pts, hits
+        return relevancia(texto, url, self.secoes, secoes)
 
     def _enfileirar(self, links: list[Link], origem: _Item) -> None:
         ativas = self._secoes_ativas()
@@ -284,10 +272,6 @@ class Crawler:
 
     def _secoes_de(self, texto: str, url: str) -> list[str]:
         return self._relevancia(texto, url, list(self.secoes))[1]
-
-    def _secoes_pagina(self, parsed, item: _Item, url: str) -> list[str]:
-        alvo = " ".join([parsed.titulo or "", *parsed.h1, *parsed.breadcrumbs, item.texto_link])
-        return self._relevancia(alvo, url, list(self.secoes))[1]
 
     # ------------------------------------------------------------ arquivos
 

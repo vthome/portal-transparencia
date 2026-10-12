@@ -29,7 +29,14 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Chromium para portais SPA
         run: python -m playwright install --with-deps chromium
-      - name: Rodada de coleta
+      - name: Verificação prévia (banco, schema, storage, Chromium, portais)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          CRAWLER_USER_AGENT: ${{ vars.CRAWLER_USER_AGENT }}
+        run: python -m ingestion.preflight
+      - name: Rodada de coleta + extração
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -40,10 +47,17 @@ jobs:
           [ -n "${{ inputs.entes }}" ] && ARGS="$ARGS --entes ${{ inputs.entes }}"
           [ -n "${{ inputs.max_paginas }}" ] && ARGS="$ARGS --max-paginas ${{ inputs.max_paginas }}"
           python -m ingestion.pipeline $ARGS
-      - name: Resumo da rodada
+      - name: Relatório no resumo do job
+        if: always()
+        run: |
+          REL=$(ls -t data/runs/*-relatorio.md 2>/dev/null | head -1 || true)
+          [ -n "$REL" ] && cat "$REL" >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Resumo e relatório da rodada
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: resumo-coleta
-          path: data/runs/*.json
+          path: |
+            data/runs/*.json
+            data/runs/*-relatorio.md
           if-no-files-found: ignore

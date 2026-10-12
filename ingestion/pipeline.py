@@ -29,20 +29,27 @@ from ingestion.transform.validate import load_entities, load_platforms, load_sec
 log = logging.getLogger("pipeline")
 
 
-def build_backends(settings: Settings, local: bool) -> tuple[Repository, Storage]:
-    if local or not settings.database_url:
-        if not local:
-            log.warning("DATABASE_URL ausente: usando repositório local em %s", settings.data_dir / "local")
-        repo: Repository = LocalRepository(settings.data_dir / "local")
-    else:
-        repo = PostgresRepository(settings.database_url)
-    if local or not (settings.supabase_url and settings.supabase_secret_key):
-        storage: Storage = LocalStorage(settings.data_dir / "objetos")
-    else:
-        sb = SupabaseStorage(settings.supabase_url, settings.supabase_secret_key, settings.supabase_bucket)
-        sb.ensure_bucket()
-        storage = sb
-    return repo, storage
+class ConfigAusente(SystemExit):
+    pass
+
+
+def build_backends(settings: Settings, local: bool, storage: bool = True) -> tuple[Repository, Storage | None]:
+    """--local grava em data/; sem --local, exige Supabase completo (nada de cair no local
+    em silêncio e o usuário achar que gravou no banco)."""
+    if local:
+        return LocalRepository(settings.data_dir / "local"), \
+            (LocalStorage(settings.data_dir / "objetos") if storage else None)
+    faltam = [n for n, v in (("DATABASE_URL", settings.database_url), ("SUPABASE_URL", settings.supabase_url),
+                             ("SUPABASE_SECRET_KEY", settings.supabase_secret_key)) if not v]
+    if (storage and faltam) or not settings.database_url:
+        raise ConfigAusente(f"faltam variáveis {faltam} no .env (ou use --local). "
+                            "Rode `python -m ingestion.preflight` para diagnosticar.")
+    repo: Repository = PostgresRepository(settings.database_url)
+    if not storage:
+        return repo, None
+    sb = SupabaseStorage(settings.supabase_url, settings.supabase_secret_key, settings.supabase_bucket)
+    sb.ensure_bucket()
+    return repo, sb
 
 
 def run(entities: list[Entity], repo: Repository, storage: Storage, settings: Settings,
@@ -56,13 +63,19 @@ def run(entities: list[Entity], repo: Repository, storage: Storage, settings: Se
     log.info("rodada %s: %d entes", run_id, len(entities))
 
     resultados: dict[str, Any] = {}
-    with ThreadPoolExecutor(max_workers=max(1, settings.paralelismo_entes)) as pool:
-        futs = {pool.submit(collect_entity, e, run_id, repo, storage, settings, **collect_kwargs): e
-                for e in entities}
-        for fut in as_completed(futs):
-            e = futs[fut]
-            stats = fut.result()
-            resultados[e.id] = asdict(stats)
+    try:
+        with ThreadPoolExecutor(max_workers=max(1, settings.paralelismo_entes)) as pool:
+            futs = {pool.submit(collect_entity, e, run_id, repo, storage, settings, **collect_kwargs): e
+                    for e in entities}
+            for fut in as_completed(futs):
+                e = futs[fut]
+                stats = fut.result()
+                resultados[e.id] = asdict(stats)
+                log.info("[%d/%d] %s concluído (%s)", len(resultados), len(entities), e.id, stats.status)
+    except BaseException:
+        # Ctrl+C ou erro inesperado: a rodada não fica eternamente 'executando'
+        repo.finish_run(run_id, "falhou")
+        raise
 
     status_jobs = [r["status"] for r in resultados.values()]
     if all(s == "concluido" for s in status_jobs):
@@ -81,6 +94,13 @@ def run(entities: list[Entity], repo: Repository, storage: Storage, settings: Se
     out = settings.data_dir / "runs"
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{run_id}.json").write_text(json.dumps(resumo, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        from ingestion.report import gerar_relatorio
+
+        resumo["relatorio"] = str(gerar_relatorio(repo, str(run_id), settings.data_dir,
+                                                  [e.id for e in entities]))
+    except Exception as e:  # relatório é conveniência; nunca derruba a rodada
+        log.warning("não foi possível gerar o relatório: %s", e)
     return resumo
 
 

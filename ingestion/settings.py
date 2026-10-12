@@ -26,7 +26,7 @@ def _bool(name: str, default: bool) -> bool:
 class Settings:
     # Identificação do robô (obrigatória por boa prática; contato permite ao gestor reclamar)
     user_agent: str = field(default_factory=lambda: os.getenv(
-        "COLETA_USER_AGENT",
+        "CRAWLER_USER_AGENT",
         "MonitorTransparenciaBot/0.1 (+https://github.com/SEU_USUARIO/portal-transparencia)"))
     # Limites de coleta
     req_por_segundo: float = field(default_factory=lambda: float(os.getenv("COLETA_REQ_POR_SEGUNDO", "1")))
