@@ -23,8 +23,16 @@ __pycache__/
 data/raw/
 data/processed/
 data/downloads/
+data/cache/
+*.html.gz
+screenshots/
 *.log
 
 # Modelos e artefatos locais
 models/
 artifacts/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.idea/
