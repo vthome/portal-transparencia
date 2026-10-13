@@ -116,6 +116,8 @@ def rodar(nome: str, cmd: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--sem-testes", action="store_true")
+    ap.add_argument("--sem-manifesto", action="store_true",
+                    help="não compara com o pacote (no CI: lá o repositório é a referência)")
     ap.add_argument("--gerar-manifesto", nargs="*", help=argparse.SUPPRESS)  # uso interno, ao empacotar
     a = ap.parse_args(argv)
     if a.gerar_manifesto is not None:
@@ -123,8 +125,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"manifesto com {len(a.gerar_manifesto)} arquivos")
         return 0
 
-    print(f"Repositório: {RAIZ}\n\n== Arquivos do pacote")
-    falhas = conferir_manifesto()
+    falhas = 0
+    if not a.sem_manifesto:
+        print(f"Repositório: {RAIZ}\n\n== Arquivos do pacote")
+        falhas = conferir_manifesto()
     print("\n== Sintaxe e formatos")
     falhas += conferir_python() + conferir_configs()
     import importlib.util

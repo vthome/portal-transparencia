@@ -1,0 +1,42 @@
+name: Saúde da API publicada
+# Teste de fumaça diário da API no Render (só leitura). Se falhar, o GitHub avisa por e-mail
+# quem configurou o repositório. Também "acorda" a API do plano free no início do expediente.
+on:
+  schedule:
+    - cron: "37 10 * * 1-5"          # dias úteis, ~07:37 em Brasília (10:37 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fumaca:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      API_URL: ${{ vars.API_URL }}    # Settings → Secrets and variables → Actions → Variables
+    steps:
+      - name: API_URL configurada?
+        id: cfg
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Variável API_URL não definida no repositório; nada a testar." >> "$GITHUB_STEP_SUMMARY"
+            echo "pular=1" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.pular != '1'
+      - uses: actions/setup-python@v5
+        if: steps.cfg.outputs.pular != '1'
+        with:
+          python-version: "3.12"
+      - if: steps.cfg.outputs.pular != '1'
+        run: pip install requests
+      - name: Teste de fumaça (scripts/testar_api.py)
+        if: steps.cfg.outputs.pular != '1'
+        run: |
+          set -o pipefail
+          python scripts/testar_api.py --url "$API_URL" | tee saida.txt
+      - name: Resumo no job
+        if: always() && steps.cfg.outputs.pular != '1'
+        run: |
+          { echo '### API: '"$API_URL"; echo '```'; cat saida.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

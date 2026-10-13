@@ -1,7 +1,10 @@
 name: Coleta agendada
+# Camada 1. Ao terminar com sucesso, dispara o workflow "Conclusão" (Camada 2).
 on:
   schedule:
-    - cron: "0 9 1,15 * *"           # dias 1 e 15, 06:00 em Brasília (09:00 UTC)
+    # todos os dias às 07:00 em Brasília (10:00 UTC; o Brasil não tem horário de verão).
+    # O cron do GitHub é em UTC e pode começar alguns minutos (até ~1 h em pico) depois.
+    - cron: "0 10 * * *"
   workflow_dispatch:
     inputs:
       entes:
@@ -11,6 +14,9 @@ on:
         description: "orçamento de páginas por ente"
         required: false
         default: "60"
+
+permissions:
+  contents: read
 
 concurrency:                          # nunca duas rodadas ao mesmo tempo
   group: coleta
@@ -42,16 +48,20 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           CRAWLER_USER_AGENT: ${{ vars.CRAWLER_USER_AGENT }}
+          GATILHO: ${{ github.event_name == 'schedule' && 'agendado' || 'manual' }}
+          ENTES: ${{ inputs.entes }}               # entradas via env: nunca interpoladas no script
+          MAX_PAGINAS: ${{ inputs.max_paginas }}
         run: |
-          ARGS="--gatilho ${{ github.event_name == 'schedule' && 'agendado' || 'manual' }}"
-          [ -n "${{ inputs.entes }}" ] && ARGS="$ARGS --entes ${{ inputs.entes }}"
-          [ -n "${{ inputs.max_paginas }}" ] && ARGS="$ARGS --max-paginas ${{ inputs.max_paginas }}"
-          python -m ingestion.pipeline $ARGS
+          ARGS=(--gatilho "$GATILHO")
+          if [ -n "$ENTES" ]; then ARGS+=(--entes "$ENTES"); fi
+          if [ -n "$MAX_PAGINAS" ]; then ARGS+=(--max-paginas "$MAX_PAGINAS"); fi
+          python -m ingestion.pipeline "${ARGS[@]}"
       - name: Relatório no resumo do job
         if: always()
         run: |
-          REL=$(ls -t data/runs/*-relatorio.md 2>/dev/null | head -1 || true)
-          [ -n "$REL" ] && cat "$REL" >> "$GITHUB_STEP_SUMMARY" || true
+          for REL in data/runs/*-relatorio.md; do        # uma rodada por job: no máximo um arquivo
+            if [ -f "$REL" ]; then cat "$REL" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
       - name: Resumo e relatório da rodada
         if: always()
         uses: actions/upload-artifact@v4
