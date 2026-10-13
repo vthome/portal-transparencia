@@ -1,6 +1,6 @@
 # Operação — Agendamento e CI (GitHub Actions)
 
-Todo o ciclo roda de graça no GitHub Actions. Em repositório público, os minutos são ilimitados. Em repositório privado, a franquia free é de 2.000 minutos por mês: com a coleta diária (coleta + conclusão ≈ 30–60 min por dia), o uso fica perto do limite. 
+Todo o ciclo roda de graça no GitHub Actions. Em repositório público, os minutos são ilimitados. Em repositório privado, a franquia free é de 2.000 minutos por mês: com a coleta diária (coleta + conclusão ≈ 30–60 min por dia), o uso fica perto do limite. Para repositório privado, prefira o repositório público ou acompanhe em Settings → Billing.
 
 | Workflow | Arquivo | Quando roda | O que faz |
 |---|---|---|---|

@@ -108,7 +108,7 @@
  "scripts/dashboard.sh": "32b90e76d18205a4c5347667c219faefc47b1148f0bf3ffec5f41e1e3fded8f9",
  "scripts/importar_checklist.py": "d2e001819fa4cd7d372515c9b36b0c5c6cab5067ec85df8f2ddadd5094670908",
  "scripts/testar_api.py": "7a47e2bfbe3d6693724a0c93e16eac00bd3dc20365f33e2e366380de5fe3e5fd",
- "scripts/verificar.py": "d53347dac2e22feb5d1ef9e6bb2184866e69ec3341cabcfe683bf79a4fd8855b",
+ "scripts/verificar.py": "e087754f3fe62e0034962dc010dac653658aaa469a470cf883bef279d8e0a697",
  "sql/api_role.sql": "de1a606fcf2127093b8e46083b5b0f7dbe9cdc0d3e148760657ff6a2e34a194c",
  "sql/schema.sql": "64a3ab5fadc3bd21073d78c90b864977bc62ebbbb8981caedb5ae40d566a5c1f",
  "tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
