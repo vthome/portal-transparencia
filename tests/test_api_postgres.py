@@ -60,11 +60,19 @@ def dados(tmp_path_factory):
     return [int(x) for x in runs]
 
 
-def _app(**kw):
+def _cfg(**kw):
+    """Configuração isolada do .env de quem roda os testes."""
     from api.config import ApiSettings
+
+    base = dict(database_url=DSN, token_revisao=TOKEN, token_leitura=None, cors_origins=[], busca="hash",
+                supabase_url=None, supabase_secret_key=None)
+    return ApiSettings(**{**base, **kw})
+
+
+def _app(**kw):
     from api.main import create_app
 
-    return create_app(ApiSettings(database_url=DSN, token_revisao=TOKEN, busca="hash", **kw))
+    return create_app(_cfg(**kw))
 
 
 @pytest.fixture(scope="module")
@@ -249,10 +257,9 @@ def test_usuario_restrito_da_api(dados):
     params.update(user="monitor_api", password=senha)
     dsn_api = make_conninfo(**params)
 
-    from api.config import ApiSettings
     from api.main import create_app
 
-    with TestClient(create_app(ApiSettings(database_url=dsn_api, token_revisao=TOKEN, busca="hash"))) as cli:
+    with TestClient(create_app(_cfg(database_url=dsn_api))) as cli:
         assert cli.get("/health").json()["status"] == "ok"
         rs = cli.get(f"/entes/{SLUG}/resultados").json()
         assert len(rs) == 142
