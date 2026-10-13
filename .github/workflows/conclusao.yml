@@ -1,6 +1,8 @@
 name: Conclusão (embeddings, conformidade, score)
+# Camada 2. Roda sozinha depois de cada "Coleta agendada" bem-sucedida (inclusive rodada parcial,
+# em que só parte dos entes falhou); se a coleta falhar inteira, não reavalia a rodada anterior.
 on:
-  workflow_run:                        # roda sozinha ao fim de cada coleta (mesmo parcial)
+  workflow_run:
     workflows: ["Coleta agendada"]
     types: [completed]
   workflow_dispatch:                   # ou manualmente, p.ex. depois de mudar criteria.yaml/scoring.yaml
@@ -21,13 +23,16 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 concurrency:
   group: conclusao
   cancel-in-progress: false
 
 jobs:
   conclusao:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'cancelled'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -50,17 +55,23 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-${{ vars.EMBEDDINGS_MODELO || 'serafim-100m-ir' }}
       - name: Embeddings + conformidade + score
+        env:
+          EMBEDDER: ${{ inputs.embedder || 'modelo' }}    # entradas via env: nunca interpoladas no script
+          RODADA: ${{ inputs.run }}
+          ENTES: ${{ inputs.entes }}
+          FORCAR: ${{ inputs.forcar }}
         run: |
-          ARGS="--embedder ${{ inputs.embedder || 'modelo' }}"
-          [ -n "${{ inputs.run }}" ] && ARGS="$ARGS --run ${{ inputs.run }}"
-          [ -n "${{ inputs.entes }}" ] && ARGS="$ARGS --entes ${{ inputs.entes }}"
-          [ "${{ inputs.forcar }}" = "true" ] && ARGS="$ARGS --forcar"
-          python -m compliance.pipeline $ARGS
+          ARGS=(--embedder "$EMBEDDER")
+          if [ -n "$RODADA" ]; then ARGS+=(--run "$RODADA"); fi
+          if [ -n "$ENTES" ]; then ARGS+=(--entes "$ENTES"); fi
+          if [ "$FORCAR" = "true" ]; then ARGS+=(--forcar); fi
+          python -m compliance.pipeline "${ARGS[@]}"
       - name: Relatório no resumo do job
         if: always()
         run: |
-          REL=$(ls -t data/runs/*-conformidade.md 2>/dev/null | head -1 || true)
-          [ -n "$REL" ] && cat "$REL" >> "$GITHUB_STEP_SUMMARY" || true
+          for REL in data/runs/*-conformidade.md; do        # uma rodada por job: no máximo um arquivo
+            if [ -f "$REL" ]; then cat "$REL" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

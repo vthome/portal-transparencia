@@ -75,6 +75,44 @@ def conferir_python() -> int:
     return erros
 
 
+def _sem_comentarios(texto: str) -> str:
+    """JSONC → JSON: tira // e /* */ fora de strings e vírgulas finais (devcontainer.json, .vscode)."""
+    out, i, n, em_str = [], 0, len(texto), False
+    while i < n:
+        c = texto[i]
+        if em_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(texto[i + 1])
+                i += 1
+            elif c == '"':
+                em_str = False
+        elif c == '"':
+            em_str = True
+            out.append(c)
+        elif texto.startswith("//", i):
+            while i < n and texto[i] != "\n":
+                i += 1
+            continue
+        elif texto.startswith("/*", i):
+            fim = texto.find("*/", i + 2)
+            i = n if fim < 0 else fim + 2
+            continue
+        else:
+            out.append(c)
+        i += 1
+    import re
+
+    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+
+
+def _ler_json(texto: str) -> None:
+    try:
+        json.loads(texto)
+    except json.JSONDecodeError:
+        json.loads(_sem_comentarios(texto))      # aceita JSON com comentários (JSONC)
+
+
 def conferir_configs() -> int:
     import tomllib
 
@@ -91,7 +129,7 @@ def conferir_configs() -> int:
             if p.suffix == ".toml":
                 tomllib.loads(texto)
             elif p.suffix == ".json":
-                json.loads(texto)
+                _ler_json(texto)
             elif yaml is not None:
                 yaml.safe_load(texto)
         except Exception as e:  # noqa: BLE001
@@ -116,6 +154,8 @@ def rodar(nome: str, cmd: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--sem-testes", action="store_true")
+    ap.add_argument("--sem-manifesto", action="store_true",
+                    help="não compara com o pacote (no CI: lá o repositório é a referência)")
     ap.add_argument("--gerar-manifesto", nargs="*", help=argparse.SUPPRESS)  # uso interno, ao empacotar
     a = ap.parse_args(argv)
     if a.gerar_manifesto is not None:
@@ -123,8 +163,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"manifesto com {len(a.gerar_manifesto)} arquivos")
         return 0
 
-    print(f"Repositório: {RAIZ}\n\n== Arquivos do pacote")
-    falhas = conferir_manifesto()
+    falhas = 0
+    if not a.sem_manifesto:
+        print(f"Repositório: {RAIZ}\n\n== Arquivos do pacote")
+        falhas = conferir_manifesto()
     print("\n== Sintaxe e formatos")
     falhas += conferir_python() + conferir_configs()
     import importlib.util

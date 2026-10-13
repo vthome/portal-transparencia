@@ -18,6 +18,7 @@ Coleta e conclusão são separadas: regras novas reavaliam snapshots antigos sem
 | 2. Conclusão | implementada — [docs/02-conclusao.md](docs/02-conclusao.md) |
 | 3. API (FastAPI · Render) | implementada — [docs/03-api.md](docs/03-api.md) |
 | 3. Dashboard (Streamlit Cloud) | implementado — [docs/04-dashboard.md](docs/04-dashboard.md) |
+| Agendamento e CI (GitHub Actions) | implementado — [docs/05-operacao.md](docs/05-operacao.md) |
 
 ## Rodando
 
@@ -76,8 +77,8 @@ sql/schema.sql   schema `monitor` v0.4 (v0.1 + coleta + Camada 2 + índices da A
 sql/api_role.sql usuário restrito para a API (lê tudo, grava só revisões)
 render.yaml      Blueprint do Render (API) · requirements-api.txt · .python-version
 tests/           offline (site falso) + integração Postgres no CI
-.github/workflows/ ci.yml, coleta.yml (dias 1 e 15), conclusao.yml (após cada coleta)
-docs/01-coleta.md, docs/02-conclusao.md, docs/03-api.md, docs/04-dashboard.md
+.github/workflows/ ci.yml (cada push), coleta.yml (diária, 07:00), conclusao.yml (após cada coleta), saude.yml (dias úteis)
+docs/01-coleta.md … docs/05-operacao.md
 ```
 
 ## Política de coleta
