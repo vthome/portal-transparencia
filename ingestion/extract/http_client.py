@@ -28,14 +28,12 @@ from ingestion.settings import Settings, get_settings
 
 TRANSITORIOS = {429, 500, 502, 503, 504}
 
-
 @dataclass
 class _DomainState:
     lock: threading.Lock = field(default_factory=threading.Lock)
     proximo_slot: float = 0.0
     falhas_seguidas: int = 0
     aberto: bool = False
-
 
 class HttpClient:
     def __init__(

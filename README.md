@@ -4,8 +4,8 @@ Prova de conceito que avalia continuamente os portais de 7 prefeituras do RJ con
 
 ```
 1. Coleta      municipios.yaml → descoberta + fingerprint → crawler (requests/Playwright) → extração
-2. Conclusão   snapshots → embeddings → verificadores + LLM juiz → score            (próxima etapa)
-3. Exposição   FastAPI (Render) → Streamlit Cloud → revisão humana                 (próxima etapa)
+2. Conclusão   snapshots → embeddings (768) → 13 verificadores → confiança → score
+3. Exposição   FastAPI (Render) → Streamlit Cloud → revisão humana
 ```
 
 Coleta e conclusão são separadas: regras novas reavaliam snapshots antigos sem recoletar.
@@ -15,8 +15,9 @@ Coleta e conclusão são separadas: regras novas reavaliam snapshots antigos sem
 | Camada | Estado |
 | --- | --- |
 | 1. Coleta | implementada — [docs/01-coleta.md](docs/01-coleta.md) |
-| 2. Conclusão | a fazer |
-| 3. API e dashboard | a fazer |
+| 2. Conclusão | implementada — [docs/02-conclusao.md](docs/02-conclusao.md) |
+| 3. API (FastAPI · Render) | implementada — [docs/03-api.md](docs/03-api.md) |
+| 3. Dashboard (Streamlit) | a fazer |
 
 ## Rodando
 
@@ -33,6 +34,16 @@ python -m ingestion.pipeline --local --entes rj-marica --max-paginas 20
 python -m ingestion.preflight          # verifica banco, schema, bucket, Chromium e portais
 .\scripts\coleta.ps1                  # Windows: preflight + coleta + relatório (Linux: scripts/coleta.sh)
 python -m ingestion.reextract          # refaz só a extração sobre os snapshots guardados
+
+# conclusão (Camada 2) sobre a última rodada — reaplique sql/schema.sql (v0.3) antes da 1ª vez
+pip install -r requirements-ml.txt     # sentence-transformers (PyTorch); ver docs/02-conclusao.md
+.\scripts\conclusao.ps1               # embeddings + conformidade + score (Linux: scripts/conclusao.sh)
+python -m compliance.pipeline --sem-embeddings   # só regras, sem modelo
+python -m compliance.calibrar          # recalibra a confiança com as revisões humanas (≥ 30)
+
+# API (Camada 3) — reaplique sql/schema.sql (v0.4); deploy no Render pelo render.yaml
+.\scripts\api.ps1                     # http://127.0.0.1:8000/docs
+python scripts/testar_api.py --url https://<seu-servico>.onrender.com
 ```
 
 ## Estrutura
@@ -44,12 +55,22 @@ ingestion/
   extract/       http_client.py, crawler.py, renderer.py, extract_data.py
   transform/     normalize.py, validate.py, parse_html.py, parse_files.py, extracao.py
   load/          storage.py, load_postgres.py
+  transform/prepare_documents.py, embeddings/generate_embeddings.py   (trechos e vetores 768)
   models.py, settings.py, pipeline.py, preflight.py, report.py, reextract.py
-scripts/         coleta.ps1, coleta.sh
-sql/schema.sql   schema `monitor` (v0.1 + colunas da coleta)
+compliance/
+  config/        criteria.yaml (142 quesitos), scoring.yaml, checklistPortalTransp.xlsx
+  checkers/      existencia, estruturados, documentos, acessibilidade, semantico (+ base)
+  coleta.py, checklist.py, confidence.py, scoring.py, engine.py, repo.py, pipeline.py, report.py, calibrar.py
+api/
+  main.py, config.py, database.py, deps.py, schemas.py, servicos.py
+  routers/       entes, indicadores, avaliacoes, revisoes, documentos, monitoramento
+scripts/         coleta.ps1/.sh, conclusao.ps1/.sh, api.ps1/.sh, testar_api.py, importar_checklist.py
+sql/schema.sql   schema `monitor` v0.4 (v0.1 + coleta + Camada 2 + índices da API)
+sql/api_role.sql usuário restrito para a API (lê tudo, grava só revisões)
+render.yaml      Blueprint do Render (API) · requirements-api.txt · .python-version
 tests/           offline (site falso) + integração Postgres no CI
-.github/workflows/ ci.yml, coleta.yml (dias 1 e 15)
-docs/01-coleta.md
+.github/workflows/ ci.yml, coleta.yml (dias 1 e 15), conclusao.yml (após cada coleta)
+docs/01-coleta.md, docs/02-conclusao.md, docs/03-api.md
 ```
 
 ## Política de coleta

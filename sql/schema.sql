@@ -1,5 +1,5 @@
 -- =====================================================================
--- Monitor de Conformidade de Portais da Transparência — schema v0.3
+-- Monitor de Conformidade de Portais da Transparência — schema v0.4
 -- Rodar inteiro no Supabase: SQL Editor > New query > colar > Run.
 -- Idempotente: pode ser executado de novo sem erro e sem apagar dados.
 --
@@ -8,6 +8,8 @@
 -- v0.3  seção 6.2: Camada 2 — embeddings em 768 dimensões, hash de chunk (reuso entre
 --       rodadas), sinais de confiança por resultado, versão do motor na avaliação.
 --       Quem já rodou a v0.1/v0.2 só precisa rodar este arquivo de novo.
+-- v0.4  seção 6.3: Camada 3 — índices da busca por texto e da fila de revisão (API).
+--       Usuário restrito para a API: sql/api_role.sql (opcional, recomendado).
 --
 -- Também roda em Postgres puro com pgvector (CI): os trechos exclusivos do
 -- Supabase (roles anon/authenticated, storage.buckets) são condicionais.
@@ -409,6 +411,15 @@ from monitor.v_latest_evaluation ev
 join monitor.entity e on e.id = ev.entity_id
 join monitor.criterion_result cr on cr.evaluation_id = ev.id
 join monitor.criterion c on c.id = cr.criterion_id;
+
+-- =====================================================================
+-- 6.3 v0.4 — Camada 3 (API)
+-- =====================================================================
+-- Busca por texto da API (GET /busca?modo=texto): full-text em português sobre os trechos.
+create index if not exists ix_chunk_fts on monitor.chunk
+  using gin (to_tsvector('portuguese', texto));
+-- Fila de revisão e "último veredito do revisor" por resultado
+create index if not exists ix_review_resultado on monitor.human_review (criterion_result_id, revisado_em desc);
 
 -- ---------- 7. Segurança ----------
 -- RLS ligado em tudo e SEM políticas: só o backend (conexão Postgres / chave secreta)

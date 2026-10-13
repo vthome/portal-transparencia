@@ -1,0 +1,12 @@
+# API (Camada 3) — o que o Render instala. Enxuto: sem Playwright, pandas, PDF nem PyTorch.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+psycopg[binary]>=3.2
+psycopg-pool>=3.2
+pydantic>=2.7
+pyyaml>=6.0
+numpy>=1.26              # importado pelos verificadores (compliance) usados no score revisado
+requests>=2.32           # links assinados do Supabase Storage
+python-dotenv>=1.0
+# Busca semântica na própria API (API_BUSCA=modelo) exige ~1,5 GB de RAM: acrescente
+# sentence-transformers e torch (CPU) e use uma instância Standard ou maior.

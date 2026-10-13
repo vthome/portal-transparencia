@@ -9,7 +9,6 @@ Cada página coletada vira um `PageSnapshot` imediatamente persistido pelo `Sink
 (progresso parcial sobrevive a uma queda no meio da rodada). Páginas bloqueadas por
 robots.txt ou com erro também são registradas — são a evidência de "não verificável".
 """
-
 from __future__ import annotations
 
 import hashlib
