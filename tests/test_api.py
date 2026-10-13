@@ -14,6 +14,15 @@ from api.config import ApiSettings  # noqa: E402
 from api.main import create_app  # noqa: E402
 
 AGORA = datetime(2026, 10, 12, 12, tzinfo=timezone.utc)
+
+
+def cfg(**kw) -> ApiSettings:
+    """Configuração isolada: ignora o .env de quem roda os testes (tokens, Supabase, busca)."""
+    base = dict(database_url=None, token_revisao=None, token_leitura=None, cors_origins=[], busca="texto",
+                supabase_url=None, supabase_secret_key=None, supabase_bucket="snapshots", link_expira_s=3600)
+    return ApiSettings(**{**base, **kw})
+
+
 TOKEN = "tok-revisao"
 
 
@@ -135,7 +144,7 @@ def repo():
 
 @pytest.fixture
 def cli(repo):
-    app = create_app(ApiSettings(database_url=None, token_revisao=TOKEN, busca="texto"), repo=repo)
+    app = create_app(cfg(database_url=None, token_revisao=TOKEN, busca="texto"), repo=repo)
     with TestClient(app) as c:
         app.state.assinador = AssinadorFalso()
         yield c
@@ -219,7 +228,7 @@ def test_health_e_raiz(cli):
 
 
 def test_sem_banco_responde_503():
-    with TestClient(create_app(ApiSettings(database_url=None))) as c:
+    with TestClient(create_app(cfg(database_url=None))) as c:
         assert c.get("/health").status_code == 503
         assert c.get("/entes").status_code == 503
 
@@ -235,7 +244,7 @@ def test_erro_de_banco_vira_503(repo):
         def ping(self):
             raise RuntimeError("down")
 
-    with TestClient(create_app(ApiSettings(database_url=None), repo=Quebrado()), raise_server_exceptions=False) as c:
+    with TestClient(create_app(cfg(database_url=None), repo=Quebrado()), raise_server_exceptions=False) as c:
         assert c.get("/entes").status_code == 503
         assert c.get("/health").json()["banco"] == "indisponível"
 
@@ -273,7 +282,7 @@ def test_post_revisao(cli, repo):
 
 
 def test_revisao_desligada_sem_token(repo):
-    with TestClient(create_app(ApiSettings(database_url=None), repo=repo)) as c:
+    with TestClient(create_app(cfg(database_url=None), repo=repo)) as c:
         r = c.post("/revisoes", json={"resultado_id": 12, "status_corrigido": "atende", "revisor": "Ana"},
                    headers={"X-API-Key": "qualquer"})
         assert r.status_code == 503 and "API_TOKEN_REVISAO" in r.json()["detail"]
@@ -289,7 +298,7 @@ def test_busca_texto_e_semantica(cli, repo):
     b = cli.get("/busca", params={"q": "creche"}).json()
     assert b["modo"] == "texto" and b["resultados"][0]["texto"] == "... creche ..."
     assert cli.get("/busca", params={"q": "creche", "modo": "semantica"}).status_code == 409
-    with TestClient(create_app(ApiSettings(database_url=None, busca="hash"), repo=repo)) as c:
+    with TestClient(create_app(cfg(database_url=None, busca="hash"), repo=repo)) as c:
         b = c.get("/busca", params={"q": "creche"}).json()
         assert b["modo"] == "semantica" and b["modelo"] == "hash-bow-768"
         assert c.get("/busca", params={"q": "creche", "modo": "texto"}).json()["modo"] == "texto"
@@ -301,7 +310,7 @@ def test_link_assinado_e_storage_nao_configurado(cli, repo):
     assert cli.get("/evidencias/101/arquivo", params={"tipo": "html"}).json()["chave"] == "html/aa/x.html"
     assert cli.get("/evidencias/101/arquivo", params={"tipo": "arquivo"}).status_code == 404
     assert cli.get("/evidencias/5/arquivo").status_code == 404
-    with TestClient(create_app(ApiSettings(database_url=None), repo=repo)) as c:
+    with TestClient(create_app(cfg(database_url=None), repo=repo)) as c:
         assert c.get("/evidencias/101/arquivo").status_code == 503
 
 
@@ -316,7 +325,7 @@ def test_assinador_monta_url_do_supabase():
             return type("R", (), {"status_code": 200, "text": "",
                                   "json": lambda s: {"signedURL": "/object/sign/snapshots/png/a.png?token=t"}})()
 
-    s = ApiSettings(supabase_url="https://abc.supabase.co/", supabase_secret_key="sb_secret_x", link_expira_s=90)
+    s = cfg(supabase_url="https://abc.supabase.co/", supabase_secret_key="sb_secret_x", link_expira_s=90)
     a = Assinador(s, session=Sessao())
     assert a.assinar("png/a.png") == "https://abc.supabase.co/storage/v1/object/sign/snapshots/png/a.png?token=t"
     assert a.http.chamada == ("https://abc.supabase.co/storage/v1/object/sign/snapshots/png/a.png",
@@ -327,7 +336,7 @@ def test_assinador_monta_url_do_supabase():
 def test_monitoramento_checklist_e_token_de_leitura(cli, repo):
     assert cli.get("/rodadas/2").json() == [{"slug": "rj-teste"}] and cli.get("/rodadas/3").status_code == 404
     assert [c["codigo"] for c in cli.get("/checklist").json()] == ["2.1", "10.2"]
-    with TestClient(create_app(ApiSettings(database_url=None, token_leitura="L"), repo=repo)) as c:
+    with TestClient(create_app(cfg(database_url=None, token_leitura="L"), repo=repo)) as c:
         assert c.get("/entes").status_code == 401 and c.get("/health").status_code == 200
         assert c.get("/entes", headers={"X-API-Key": "L"}).status_code == 200
 
