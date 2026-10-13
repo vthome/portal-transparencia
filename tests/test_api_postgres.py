@@ -274,3 +274,40 @@ def test_usuario_restrito_da_api(dados):
                                                              "values ('x', 'y')"):
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 k.execute(proibido)
+
+
+def test_dashboard_sobre_dados_reais(cli, dados):
+    """As 6 páginas do Streamlit contra a API real (Postgres + pgvector, dados das Camadas 1 e 2)."""
+    pytest.importorskip("streamlit")
+    pytest.importorskip("plotly")
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).parent.parent / "dashboard"))
+    from tests import streamlit_shim
+
+    streamlit_shim.instalar()
+    import streamlit as st
+    from painel.cliente import ApiCliente
+    from painel.config import Config
+    from streamlit.testing.v1 import AppTest
+
+    cliente = ApiCliente("http://testserver", token=TOKEN, session=cli)
+    for pagina in [None, "paginas/municipio.py", "paginas/evolucao.py", "paginas/revisao.py",
+                   "paginas/busca.py", "paginas/monitoramento.py"]:
+        st.cache_data.clear()
+        at = AppTest.from_file(str(Path(__file__).parent.parent / "dashboard" / "app.py"), default_timeout=60)
+        at.session_state["_cliente_api"] = cliente
+        at.session_state["_config_painel"] = Config(api_url="http://testserver", api_token_revisao=TOKEN)
+        at.run()
+        if pagina:
+            at.switch_page(pagina).run()
+        assert not at.exception, (pagina, [e.value for e in at.exception])
+        assert not at.error, (pagina, [e.value for e in at.error])
+        if pagina == "paginas/municipio.py":
+            assert len(at.dataframe[1].value) == 142                  # os 142 quesitos
+        if pagina == "paginas/evolucao.py":
+            assert {m.label for m in at.metric} >= {"Melhoraram", "Pioraram"}   # 2 rodadas: há diff
+        if pagina == "paginas/busca.py":
+            at.text_input(key="busca_q").set_value("despesas")
+            next(b for b in at.button if b.label == "Buscar").click().run()
+            assert not at.exception and any("busca semântica" in c.value for c in at.caption)
