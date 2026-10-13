@@ -1,11 +1,13 @@
 -- =====================================================================
--- Monitor de Conformidade de Portais da Transparência — schema v0.2
+-- Monitor de Conformidade de Portais da Transparência — schema v0.3
 -- Rodar inteiro no Supabase: SQL Editor > New query > colar > Run.
 -- Idempotente: pode ser executado de novo sem erro e sem apagar dados.
 --
 -- v0.1  base: catálogo, execução, coleta, conclusão, views, segurança, bucket
 -- v0.2  seção 6.1: colunas que a Camada 1 (coleta) grava + views de monitoramento.
---       Quem já rodou a v0.1 só precisa rodar este arquivo de novo.
+-- v0.3  seção 6.2: Camada 2 — embeddings em 768 dimensões, hash de chunk (reuso entre
+--       rodadas), sinais de confiança por resultado, versão do motor na avaliação.
+--       Quem já rodou a v0.1/v0.2 só precisa rodar este arquivo de novo.
 --
 -- Também roda em Postgres puro com pgvector (CI): os trechos exclusivos do
 -- Supabase (roles anon/authenticated, storage.buckets) são condicionais.
@@ -170,8 +172,8 @@ create table if not exists monitor.file_artifact (
 );
 create index if not exists ix_file_sha on monitor.file_artifact (sha256);
 
--- Embeddings: 512 = DistilUSE (distiluse-base-multilingual-cased-v2).
--- Se optar pelo SERAFIM, troque 512 pela dimensão do modelo escolhido ANTES da 1ª carga.
+-- Embeddings: 768 dimensões (SERAFIM 100M / mpnet multilíngue). A seção 6.2 converte
+-- instalações antigas em 512. Trocar de dimensão exige esvaziar monitor.chunk antes.
 create table if not exists monitor.chunk (
   id                bigint generated always as identity primary key,
   page_snapshot_id  bigint references monitor.page_snapshot(id) on delete cascade,
@@ -179,7 +181,7 @@ create table if not exists monitor.chunk (
   ordem             integer not null default 0,
   texto             text not null,
   modelo            text not null,
-  embedding         vector(512),
+  embedding         vector(768),
   check (page_snapshot_id is not null or file_artifact_id is not null)
 );
 create index if not exists ix_chunk_embedding on monitor.chunk
@@ -351,6 +353,62 @@ select r.id as run_id, r.gatilho, r.status, r.iniciado_em, r.finalizado_em,
        coalesce(sum(j.bytes), 0)    as bytes
 from monitor.run r left join monitor.crawl_job j on j.run_id = r.id
 group by r.id;
+
+-- =====================================================================
+-- 6.2 v0.3 — Camada 2 (conclusão)
+-- =====================================================================
+
+-- Dimensão do embedding: 768. Só converte se a tabela estiver vazia (vetores de
+-- dimensões diferentes não são comparáveis; recalcular é obrigatório).
+do $$
+declare atual int; n bigint;
+begin
+  select a.atttypmod into atual from pg_attribute a
+   where a.attrelid = 'monitor.chunk'::regclass and a.attname = 'embedding';
+  if atual is distinct from 768 then
+    select count(*) into n from monitor.chunk;
+    if n > 0 then
+      raise exception 'monitor.chunk tem % linhas com dimensão %; rode "truncate monitor.chunk" antes de mudar para 768', n, atual;
+    end if;
+    drop index if exists monitor.ix_chunk_embedding;
+    execute 'alter table monitor.chunk alter column embedding type vector(768)';
+  end if;
+end $$;
+create index if not exists ix_chunk_embedding on monitor.chunk
+  using hnsw (embedding vector_cosine_ops);
+
+alter table monitor.chunk
+  add column if not exists texto_hash char(64),                  -- sha256(modelo + texto): reuso entre rodadas
+  add column if not exists criado_em  timestamptz not null default now();
+create index if not exists ix_chunk_hash on monitor.chunk (modelo, texto_hash);
+create index if not exists ix_chunk_page on monitor.chunk (page_snapshot_id);
+create index if not exists ix_chunk_file on monitor.chunk (file_artifact_id);
+
+alter table monitor.criterion
+  add column if not exists params_hash char(64);                  -- muda quando o verificador/params mudam
+
+alter table monitor.evaluation
+  add column if not exists engine_version text,
+  add column if not exists modelo_embedding text;
+
+alter table monitor.criterion_result
+  add column if not exists sinais jsonb not null default '{}';    -- entradas da confiança (auditoria e calibração)
+
+-- `e.*` numa view é expandido quando ela é criada: recriar aqui, depois das colunas novas,
+-- para que engine_version e modelo_embedding apareçam já na primeira execução.
+create or replace view monitor.v_latest_evaluation as
+select distinct on (e.entity_id) e.*
+from monitor.evaluation e
+order by e.entity_id, e.avaliado_em desc;
+
+-- Resultado atual por ente e critério (última avaliação), para a API e o dashboard
+create or replace view monitor.v_resultado_atual as
+select ev.entity_id, e.slug as entity_slug, c.codigo, c.bloco, c.dimensao, c.peso, c.essencial,
+       cr.status, cr.nota, cr.confianca, cr.metodo, cr.justificativa, ev.run_id, ev.avaliado_em
+from monitor.v_latest_evaluation ev
+join monitor.entity e on e.id = ev.entity_id
+join monitor.criterion_result cr on cr.evaluation_id = ev.id
+join monitor.criterion c on c.id = cr.criterion_id;
 
 -- ---------- 7. Segurança ----------
 -- RLS ligado em tudo e SEM políticas: só o backend (conexão Postgres / chave secreta)

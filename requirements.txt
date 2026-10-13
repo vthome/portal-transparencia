@@ -12,3 +12,7 @@ pyyaml>=6.0
 pydantic>=2.7
 psycopg[binary]>=3.2
 python-dotenv>=1.0
+# --- Camada 2: conclusão (embeddings, conformidade, score) ---
+numpy>=1.26
+scikit-learn>=1.4         # calibração da confiança (compliance.calibrar)
+# o modelo de embeddings (sentence-transformers + torch) fica em requirements-ml.txt

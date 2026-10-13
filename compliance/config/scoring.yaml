@@ -1,0 +1,51 @@
+# Metodologia de score (Camada 2). Mudar este arquivo muda a versão da avaliação.
+#
+# Nota por critério: atende 1 · parcial 0,5 · não atende 0.
+# Peso por critério (criteria.yaml): 3 essencial · 2 obrigatório · 1 recomendado.
+# Nível 1: média ponderada dos critérios dentro de cada dimensão.
+# Nível 2: média SIMPLES das dimensões (cada dimensão vale o mesmo, independente
+#          de quantos quesitos tem — evita que Despesa, com 13 itens, pese mais que Obras).
+# Não aplicável e pendente (não automatizado) ficam fora do cálculo.
+# Não verificável (falha de coleta) fica fora do score e entra na faixa de incerteza:
+#   score_min = como se valesse 0 · score_max = como se valesse 1.
+
+dimensoes:
+  institucional_acesso: Institucional, acesso à informação e boas práticas
+  receita_despesa: Receita, despesa e emendas
+  pessoal: Pessoal e diárias
+  licitacoes_contratos_obras: Licitações, contratos, patrimônio e obras
+  planejamento_contas: Planejamento, gestão fiscal e prestação de contas
+
+# Cobertura = peso verificado / peso aplicável automatizado. Abaixo do mínimo, a
+# avaliação sai como "Avaliação incompleta" e não entra em ranking.
+cobertura_minima: 0.8
+
+# Faixas inspiradas no PNTP (Atricon). CONFERIR com a Cartilha PNTP 2026 antes de publicar.
+# exige_essenciais: a faixa só vale se todos os critérios essenciais estiverem "atende".
+classificacao:
+  - {nome: Diamante, min: 95, exige_essenciais: true}
+  - {nome: Ouro, min: 85, exige_essenciais: true}
+  - {nome: Prata, min: 75, exige_essenciais: true}
+  - {nome: Elevado, min: 75, exige_essenciais: false}
+  - {nome: Intermediário, min: 50, exige_essenciais: false}
+  - {nome: Básico, min: 30, exige_essenciais: false}
+  - {nome: Inicial, min: 1, exige_essenciais: false}
+  - {nome: Inexistente, min: 0, exige_essenciais: false}
+
+# Prazo máximo (dias) entre a data mais recente encontrada e a data da avaliação.
+# bimestral: RREO até 30 dias após o bimestre (LRF art. 52) + margem; quadrimestral: RGF.
+atualidade_dias:
+  mensal: 60
+  bimestral: 90
+  quadrimestral: 120
+  anual: 400
+
+# Verificador semântico: limiares de similaridade de cosseno. Dependem do modelo —
+# recalibrar ao trocar EMBEDDINGS_MODELO (ver docs/02-conclusao.md).
+semantico:
+  k: 5
+  alto: 0.60
+  medio: 0.40
+
+# Resultados com confiança abaixo deste valor entram na fila de revisão humana.
+revisao_abaixo_de: 0.6

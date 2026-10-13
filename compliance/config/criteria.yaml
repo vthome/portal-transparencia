@@ -1,0 +1,2782 @@
+# Gerado por scripts/importar_checklist.py a partir de checklistPortalTransp.xlsx (sha256 37067354b7b8).
+# Fonte de verdade da Camada 2: ajuste termos, sinônimos e pesos aqui.
+# verificador + params definem COMO cada quesito é avaliado (ver compliance/checkers).
+
+criterios:
+- codigo: '1.1'
+  bloco: '1'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: A entidade pública possui sítio oficial e/ou portal da transparência próprio ou compartilhado na internet?
+  fundamentacao: Art. 48º, II, da LC nº 101/00, e art. 8º, §2º, da LAI
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: portal
+  params: {}
+- codigo: '1.2'
+  bloco: '1'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: O acesso ao portal transparência está visível na capa do site?
+  fundamentacao: Art. 8º, caput da LAI
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: homepage_link
+  params: {}
+- codigo: '1.3'
+  bloco: '1'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: O site contém ferramenta de pesquisa de conteúdo que permita o acesso à informação?
+  fundamentacao: Art. 8º, §3º, I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: search_filter
+  params:
+    escopo: site
+- codigo: '2.1'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Competências e/ou atribuições
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - competencias
+    - atribuicoes
+    - competencia
+    secoes: &id001
+    - institucional
+- codigo: '2.2'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Estrutura organizacional
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - estrutura organizacional
+    - organograma
+    secoes: *id001
+- codigo: '2.3'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Identificação dos responsáveis pela gestão do Poder/Órgão
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - secretarios
+    - secretariado
+    - quem e quem
+    - gestores
+    - prefeito
+    - vice prefeito
+    - responsaveis
+    - dirigentes
+    secoes: *id001
+- codigo: '2.4'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Endereços
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - endereco
+    - enderecos
+    - localizacao
+    - contato
+    regex:
+    - \b\d{5}-?\d{3}\b|\b(rua|avenida|av\.|praca|praça|estrada|rodovia|travessa|alameda)\b
+    escopo: site
+- codigo: '2.5'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Telefones
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - telefone
+    - telefones
+    - contato
+    regex:
+    - \(?\b\d{2}\)?\s?\d{4,5}[-\s]?\d{4}\b|\b0800[\s-]?\d{3}[\s-]?\d{4}\b
+    escopo: site
+- codigo: '2.6'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Horário de atendimento
+  fundamentacao: Art. 8º, § 1º, I, da LAI, e art. 6º, VI, "b" da Lei nº 13.460/2017
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - horario de atendimento
+    - horario de funcionamento
+    - expediente
+    regex:
+    - \b\d{1,2}\s?h(\d{2})?\s?(as|às|a|-|até)\s?\d{1,2}\s?h|\bhor[aá]rio de (atendimento|funcionamento)\b
+    escopo: site
+- codigo: '2.7'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Perguntas e respostas mais frequentes
+  fundamentacao: Art. 8º, § 1º, VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - perguntas frequentes
+    - faq
+    - perguntas e respostas
+    - duvidas frequentes
+    escopo: site
+- codigo: '2.8'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Divulga os atos normativos próprios
+  fundamentacao: Art. 37º da CRFB; Arts. 3º, II; 6º, inciso I; 7º, incisos II, V e VI e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: semantic
+  params:
+    consulta: 'atos normativos próprios: leis municipais, decretos, portarias, resoluções e diário oficial'
+    termos:
+    - decreto
+    - decretos
+    - lei municipal
+    - leis municipais
+    - portaria
+    - portarias
+    - legislacao
+    - atos normativos
+    - diario oficial
+    secoes: *id001
+- codigo: '2.9'
+  bloco: '2'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Canal de Comunicação com cidadão do tipo ‘Fale Conosco’, que permite ao interessado comunicar-se com órgão por via
+    eletrônica ou telefônica
+  fundamentacao: Art. 8º, §3º, inciso VII, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - fale conosco
+    - contato
+    - contatos
+    - ouvidoria
+    - atendimento ao cidadao
+    escopo: site
+- codigo: '3.1'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Valores da receita pública arrecadada
+  fundamentacao: Arts. 48º, §1º, II e 48º-A, inciso II, da LC nº 101/00, e art. 8º, II, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      arrecadada:
+      - arrecadad
+      - realizad
+      - valor arrecadado
+      - receita realizada
+    secoes: &id002
+    - receita
+- codigo: '3.2'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Valores da receita pública prevista na LOA
+  fundamentacao: Arts. 48º, §1º, II e 48º-A, inciso II, da LC nº 101/00, e art. 8º, II, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      prevista:
+      - previst
+      - orcad
+      - previsao
+      - valor previsto
+      - dotacao
+    secoes: *id002
+- codigo: '3.3'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Classificação orçamentária por natureza da receita (categoria econômica, origem, espécie) e fonte de recursos
+  fundamentacao: Arts. 48º, §1º, II e 48º-A, inciso II, da LC nº 101/00, e art. 8º, II, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      categoria:
+      - categoria economica
+      - categoria
+      origem:
+      - origem
+      especie:
+      - especie
+      fonte:
+      - fonte de recurso
+      - fonte
+    minimo_parcial: 2
+    secoes: *id002
+- codigo: '3.4'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permite pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos) em relação aos critérios da receita
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - receita
+- codigo: '3.5'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos em relação aos critérios da receita
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: export
+  params:
+    secoes:
+    - receita
+- codigo: '3.6'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de informações atualizadas em relação aos critérios da receita
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - receita
+    referencia: mensal
+- codigo: '3.7'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de histórico das informações em relação aos critérios da receita
+  fundamentacao: Art. 7º, II e VI e art. 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - receita
+- codigo: '3.8'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Transferências voluntárias recebidas, a partir da celebração de convênios/acordos, com indicação, no mínimo, do total
+    previsto dos recursos envolvidos, do valor recebido, da data da transferência, do objeto e da origem dos recursos (órgão
+    repassador/concedente)
+  fundamentacao: Art. 8º, §1º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      instrumento:
+      - convenio
+      - acordo
+      - instrumento
+      - transferencia
+      valor:
+      - valor
+      - total previsto
+      - valor previsto
+      - valor do repasse
+    minimo_parcial: 1
+    secoes:
+    - transferencias
+    - receita
+- codigo: '3.9'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permite pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos) em relação aos critérios de transferências voluntárias recebidas
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: search_filter
+  params:
+    secoes:
+    - transferencias
+- codigo: '3.10'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos em relação aos critérios de transferências voluntárias recebidas
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: export
+  params:
+    secoes:
+    - transferencias
+- codigo: '3.11'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de informações atualizadas em relação aos critérios de transferências voluntárias recebidas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: freshness
+  params:
+    secoes:
+    - transferencias
+    referencia: mensal
+- codigo: '3.12'
+  bloco: '3'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de histórico das informações em relação aos critérios de transferências voluntárias recebidas
+  fundamentacao: Art. 7º, II e VI e Art. 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: history
+  params:
+    secoes:
+    - transferencias
+- codigo: '4.1'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Número e o valor de empenho, liquidação e pagamento
+  fundamentacao: Arts. 7º, VI e 8º, §1º, inciso III, da LAI; Arts. 48º, §1º, inciso II, e 48º-A, inciso I, da LC nº 101/20;
+    Art. 8º, inciso I, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      empenho:
+      - empenh
+      liquidacao:
+      - liquidac
+      - liquidad
+      pagamento:
+      - pago
+      - pagament
+    minimo_parcial: 2
+    secoes: &id003
+    - despesa
+- codigo: '4.2'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Classificação orçamentária, especificando a unidade orçamentária, a função, a subfunção, o programa, a ação, a natureza
+    da despesa e a fonte dos recursos
+  fundamentacao: Arts. 7º, VI e 8º, §1º, inciso III, da LAI; Arts. 48º, §1º, inciso II, e 48º-A, inciso I, da LC nº 101/20;
+    Art. 8º, inciso I, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      unidade:
+      - unidade orcamentaria
+      - unidade gestora
+      - orgao
+      - unidade
+      funcao:
+      - funcao
+      subfuncao:
+      - subfuncao
+      programa:
+      - programa
+      acao:
+      - acao
+      - projeto atividade
+      natureza:
+      - natureza
+      - elemento
+      fonte:
+      - fonte
+    minimo_parcial: 4
+    secoes: *id003
+- codigo: '4.3'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Pessoa física ou jurídica beneficiária do pagamento ou credor
+  fundamentacao: Arts. 7º, VI e 8º, §1º, inciso III, da LAI; Arts. 48º, §1º, inciso II, e 48º-A, inciso I, da LC nº 101/20;
+    Art. 8º, inciso I, do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      credor:
+      - credor
+      - favorecid
+      - beneficiari
+      - fornecedor
+      - razao social
+      - cpf cnpj
+      - cnpj
+    secoes: *id003
+- codigo: '4.4'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permite pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos) em relação aos critérios da despesa
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - despesa
+- codigo: '4.5'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos em relação aos critérios da despesa
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: export
+  params:
+    secoes:
+    - despesa
+- codigo: '4.6'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de informações atualizadas em relação aos critérios da despesa
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - despesa
+    referencia: mensal
+- codigo: '4.7'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de histórico das informações em relação aos critérios da despesa
+  fundamentacao: Arts. 7º, incisos II e VI e 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - despesa
+- codigo: '4.8'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Transferências realizadas a partir da celebração de convênios/acordos/ajustes, com indicação, no mínimo, do beneficiário,
+    do objeto, do valor total previsto dos recursos envolvidos, do valor concedido e a data do repasse.
+  fundamentacao: Art. 8º, §1º, inciso II, da LAI, e art. 8º, inciso I, "f" do Decreto nº 10.540/20
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      beneficiario:
+      - beneficiari
+      - convenente
+      - favorecid
+      - entidade
+      objeto:
+      - objeto
+      valor:
+      - valor
+    minimo_parcial: 2
+    secoes:
+    - transferencias
+- codigo: '4.9'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Acordos firmados que não envolvam transferência de recursos financeiros, identificando as partes, o objeto e as obrigações
+    ajustadas
+  fundamentacao: Art. 37º, "caput", da CF, e art. 8º, § 1º, V, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: semantic
+  params:
+    consulta: 'acordos e termos de cooperação firmados sem transferência de recursos: partes, objeto e obrigações'
+    termos:
+    - termo de cooperacao
+    - acordo de cooperacao
+    - protocolo de intencoes
+    - cooperacao tecnica
+    secoes:
+    - transferencias
+- codigo: '4.10'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos) em relação aos critérios de transferências voluntárias
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: search_filter
+  params:
+    secoes:
+    - transferencias
+- codigo: '4.11'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos em relação aos critérios de transferências voluntárias
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: export
+  params:
+    secoes:
+    - transferencias
+- codigo: '4.12'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de informações atualizadas em relação aos critérios de transferências voluntárias
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: freshness
+  params:
+    secoes:
+    - transferencias
+    referencia: mensal
+- codigo: '4.13'
+  bloco: '4'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Existência de histórico das informações em relação aos critérios de transferências voluntárias
+  fundamentacao: Arts. 7º, incisos II e VI, e 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: history
+  params:
+    secoes:
+    - transferencias
+- codigo: '5.1'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Relação nominal dos servidores
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      nome:
+      - nome
+      - servidor
+    secoes: &id004
+    - pessoal
+- codigo: '5.2'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Indicação de cargo e/ou função desempenhada por cada servidor
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      cargo:
+      - cargo
+      - funcao
+    secoes: *id004
+- codigo: '5.3'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Indicação da lotação de cada servidor
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      lotacao:
+      - lotacao
+      - lotado
+      - orgao
+      - secretaria
+      - setor
+      - unidade
+    secoes: *id004
+- codigo: '5.4'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Indicação das datas de admissão/exoneração/inativação
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      datas:
+      - admissao
+      - exoneracao
+      - inativacao
+      - nomeacao
+      - data de ingresso
+    secoes: *id004
+- codigo: '5.5'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Indicação da carga horária do cargo/função ocupada/desempenhada
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      carga_horaria:
+      - carga horaria
+      - jornada
+      - horas semanais
+    secoes: *id004
+- codigo: '5.6'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Indicação da remuneração nominal de cada servidor
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      remuneracao:
+      - remuneracao
+      - salario
+      - vencimento
+      - bruto
+      - liquido
+      - proventos
+    secoes: *id004
+- codigo: '5.7'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Tabela com o padrão remuneratório dos cargos e funções
+  fundamentacao: Arts. 37º, "caput" (princípios da publicidade e moralidade), e 39, § 6º, da CF; Arts. 3º, incisos I, II,
+    III, IV e V, e 8º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: document
+  params:
+    grupos:
+    - - tabela salarial
+      - tabela de vencimentos
+      - padrao remuneratorio
+      - plano de cargos
+      - tabela de remuneracao
+      - quadro de cargos
+    secoes: *id004
+- codigo: '5.8'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - pessoal
+    referencia: mensal
+- codigo: '5.9'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Arts. 7º, incisos II e VI e 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - pessoal
+- codigo: '5.10'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: export
+  params:
+    secoes:
+    - pessoal
+- codigo: '5.11'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permite pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - pessoal
+- codigo: '5.12'
+  bloco: '5'
+  dimensao: pessoal
+  matriz: comum
+  texto: 'Íntegra dos editais de concursos e seleções públicas realizados pelo órgão para provimento de cargos e empregos
+    públicos, bem como informações sobre os demais atos, contendo: vagas efetivamente preenchidas, lista de aprovados com
+    as classificações e as nomeações, fila de espera/cadastro reserva e validade.'
+  fundamentacao: Art. 3º, incisos I a III, combinado com art. 6º, inciso I, combinado com art. 7º, incisos II e VI, combinado
+    com art. 8º, caput e § 1º, inciso IV (por analogia) e § 2º da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - edital
+      - editais
+    - - concurso
+      - processo seletivo
+      - selecao publica
+    secoes: *id004
+- codigo: '6.1'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Nome do beneficiário
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      nome:
+      - nome
+      - beneficiari
+      - favorecid
+      - servidor
+    secoes: &id005
+    - diarias
+- codigo: '6.2'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Cargo do beneficiário
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      cargo:
+      - cargo
+      - funcao
+    secoes: *id005
+- codigo: '6.3'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Número de diárias usufruídas por afastamento e o valor total recebido
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      quantidade:
+      - quantidade
+      - numero de diarias
+      - qtd
+      - qtde
+      - diarias
+      valor:
+      - valor
+    minimo_parcial: 1
+    secoes: *id005
+- codigo: '6.4'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Período de afastamento
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      periodo:
+      - periodo
+      - data de saida
+      - data de retorno
+      - saida
+      - retorno
+      - inicio
+    secoes: *id005
+- codigo: '6.5'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Motivo do afastamento
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      motivo:
+      - motivo
+      - objetivo
+      - finalidade
+      - justificativa
+      - historico
+    secoes: *id005
+- codigo: '6.6'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Local de destino
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: structured_fields
+  params:
+    campos:
+      destino:
+      - destino
+      - local
+      - cidade
+      - localidade
+    secoes: *id005
+- codigo: '6.7'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Tabela ou relação que explicite os valores das diárias dentro do Estado, fora do Estado e fora do país, conforme
+    legislação local
+  fundamentacao: Art. 48º-A, I, da LC nº 101/00; Arts. 3º, incisos I, II, III, IV e V, 7º, incisos VI, e 8º da LAI; Art. 37º,
+    "caput", da CF (princípio da publicidade) e art. 8º, inciso I, "e", do Decreto nº 10.540/20
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - tabela de diarias
+      - valores das diarias
+      - valor da diaria
+      - decreto
+      - tabela
+    secoes: *id005
+- codigo: '6.8'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: freshness
+  params:
+    secoes:
+    - diarias
+    referencia: mensal
+- codigo: '6.9'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Arts. 7º, incisos II e VI, e 8º, "caput" da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: history
+  params:
+    secoes:
+    - diarias
+- codigo: '6.10'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: search_filter
+  params:
+    secoes:
+    - diarias
+- codigo: '6.11'
+  bloco: '6'
+  dimensao: pessoal
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: export
+  params:
+    secoes:
+    - diarias
+- codigo: '7.1'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Relação das licitações em ordem sequencial, informando o nº e a modalidade licitatória, o objeto, a data, o valor
+    estimado/homologado e a situação (aberto, em andamento, suspenso, finalizado), indicando os vencedores
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      numero:
+      - numero
+      - processo
+      - n do
+      - nro
+      modalidade:
+      - modalidade
+      objeto:
+      - objeto
+      data:
+      - data
+      - abertura
+      valor:
+      - valor
+      - estimado
+      - homologado
+      situacao:
+      - situacao
+      - status
+      - fase
+    minimo_parcial: 4
+    secoes: &id006
+    - licitacoes
+- codigo: '7.2'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Íntegra dos editais, dos certames em andamento e dos encerrados, e demais documentos da fase interna e externa da
+    licitação (Termo de Referência/projeto básico ou equivalente, justificativa da licitação, pareceres técnicos/jurídicos,
+    orçamento ou formação do preço de referência da licitação, anexos do edital, atas de abertura e julgamentos etc.)
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - edital
+      - editais
+      - termo de referencia
+      - projeto basico
+    secoes: *id006
+- codigo: '7.3'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Íntegra dos processos de dispensa de licitação
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - dispensa
+    secoes: *id006
+- codigo: '7.4'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Íntegra dos processos de inexigibilidade de licitação
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - inexigibilidade
+    secoes: *id006
+- codigo: '7.5'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Íntegra das Atas de Adesão - SRP
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - ata de registro
+      - atas de registro
+      - adesao
+      - srp
+      - registro de precos
+    secoes: *id006
+- codigo: '7.6'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Relação das licitações fracassadas e/ou desertas
+  fundamentacao: Arts. 7º, inciso VI, e 8º, §1º, inciso IV, da LAI, c/c art. 25º, § 3º, da Lei nº 14.133/2021; Decreto nº
+    7.892/2013 e art. 18º, § 4º, do Decreto nº 11.462/2023
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - fracassada
+    - fracassadas
+    - deserta
+    - desertas
+    regex:
+    - \b(fracassad[ao]s?|desert[ao]s?)\b
+    secoes: *id006
+- codigo: '7.7'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - licitacoes
+- codigo: '7.8'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: export
+  params:
+    secoes:
+    - licitacoes
+- codigo: '7.9'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - licitacoes
+    referencia: mensal
+- codigo: '7.10'
+  bloco: '7'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Arts. 7º, incisos II e VI, e 8º, "caput", da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - licitacoes
+- codigo: '8.1'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Relação dos contratos celebrados em ordem sequencial, contendo, no mínimo, indicação do contratado(a), do valor,
+    do objeto e da vigência, bem como dos aditivos deles decorrentes
+  fundamentacao: Arts 7º, VI e 8º, §1º, inciso IV, da LAI
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: structured_fields
+  params:
+    campos:
+      contratado:
+      - contratad
+      - fornecedor
+      - empresa
+      - razao social
+      - credor
+      valor:
+      - valor
+      objeto:
+      - objeto
+      vigencia:
+      - vigencia
+      - inicio
+      - termino
+      - prazo
+    minimo_parcial: 3
+    secoes: &id007
+    - contratos
+- codigo: '8.2'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Íntegra dos contratos e respectivos termos aditivos
+  fundamentacao: Arts 7º, VI e 8º, §1º, inciso IV, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - contrato
+      - contratos
+      - aditivo
+      - termo aditivo
+    secoes: *id007
+- codigo: '8.3'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Indicação do Fiscal do Contrato
+  fundamentacao: Arts 7º, VI e 8º, §1º, inciso IV, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - fiscal
+    - fiscal do contrato
+    - fiscais
+    regex:
+    - \bfisca(l|is)\b
+    secoes: *id007
+- codigo: '8.4'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - contratos
+    referencia: mensal
+- codigo: '8.5'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Arts. 7º, incisos II e VI, e 8º, "caput", da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - contratos
+- codigo: '8.6'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Gravação de relatórios em diversos formatos
+  fundamentacao: Art. 8º, §3º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: export
+  params:
+    secoes:
+    - contratos
+- codigo: '8.7'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - contratos
+- codigo: '8.8'
+  bloco: '8'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Ordem cronológica de seus pagamentos, bem como as justificativas que fundamentarem a eventual alteração dessa ordem
+  fundamentacao: Art. 141º, §3º, da Lei nº 14.133/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - ordem cronologica
+    - ordem cronologica de pagamentos
+    secoes:
+    - despesa
+    - contratos
+    escopo: site
+- codigo: '9.1'
+  bloco: '9'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Artigo 7º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: history
+  params:
+    secoes:
+    - patrimonio
+    filtro: &id008
+    - imoveis
+    - bens imoveis
+    - imovel
+- codigo: '9.2'
+  bloco: '9'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Artigo 7º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: freshness
+  params:
+    secoes:
+    - patrimonio
+    filtro: *id008
+    referencia: anual
+- codigo: '10.1'
+  bloco: '10'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Art. 7º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: history
+  params:
+    secoes:
+    - patrimonio
+    filtro: &id009
+    - veiculos
+    - frota
+    - veiculo
+- codigo: '10.2'
+  bloco: '10'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 7º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: freshness
+  params:
+    secoes:
+    - patrimonio
+    filtro: *id009
+    referencia: anual
+- codigo: '11.1'
+  bloco: '11'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: 'Divulga informações sobre obras: data de início, etapas, percentual concluído, status e previsão de conclusão'
+  fundamentacao: Art. 94º, §3, da Lei nº 14.133/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      inicio:
+      - data de inicio
+      - inicio
+      etapa:
+      - etapa
+      - fase
+      percentual:
+      - percentual
+      - executado
+      - execucao
+      - '%'
+      status:
+      - situacao
+      - status
+      previsao:
+      - previsao
+      - conclusao
+      - termino
+    minimo_parcial: 3
+    secoes: &id010
+    - obras
+- codigo: '11.2'
+  bloco: '11'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Divulga os quantitativos e os preços unitários e totais contratados
+  fundamentacao: Art. 8º, §1º, V, da LAI; Art. 94º, § 3º, da Lei nº 14.133/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      quantitativo:
+      - quantidade
+      - quantitativo
+      preco_unitario:
+      - preco unitario
+      - valor unitario
+      total:
+      - valor total
+      - total contratado
+      - valor contratado
+    minimo_parcial: 2
+    secoes: *id010
+- codigo: '11.3'
+  bloco: '11'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Divulga os quantitativos executados e os preços praticados
+  fundamentacao: Art. 8º, §1º, V, da LAI; Art. 94º, § 3º, da Lei nº 14.133/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      executado:
+      - executad
+      - medid
+      - medicao
+      preco_praticado:
+      - valor pago
+      - preco praticado
+      - valor medido
+      - valor executado
+    minimo_parcial: 1
+    secoes: *id010
+- codigo: '11.4'
+  bloco: '11'
+  dimensao: licitacoes_contratos_obras
+  matriz: comum
+  texto: Relação das obras paralisadas contendo o motivo, o responsável pela inexecução temporária do objeto do contrato e
+    a data prevista para o reinício da sua execução
+  fundamentacao: Art. 8º, §1º, V, da LAI, e art. 115º, § 6º, da Lei nº 14.133/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: existence
+  params:
+    termos:
+    - obras paralisadas
+    - paralisada
+    - paralisadas
+    regex:
+    - \bparalisad[ao]s?\b
+    secoes: *id010
+- codigo: '12.1'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Publica o Relatório de Gestão Fiscal (RGF)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: document
+  params:
+    grupos:
+    - - relatorio de gestao fiscal
+      - rgf
+    secoes: &id012
+    - planejamento_contas
+- codigo: '12.2'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Existência de informações atualizadas
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - planejamento_contas
+    - rreo
+    filtro: &id011
+    - relatorio de gestao fiscal
+    - rgf
+    referencia: quadrimestral
+- codigo: '12.3'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Existência de histórico das informações
+  fundamentacao: Arts. 7º, incisos II e VI, e 8º, "caput", da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - planejamento_contas
+    - rreo
+    filtro: *id011
+- codigo: '12.4'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - planejamento_contas
+- codigo: '12.5'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Publica a Prestação de Contas de Governo dos anos anteriores (Parecer Prévio do TCE/RJ em relação às Contas de Governo)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - parecer previo
+      - prestacao de contas
+      - contas de governo
+      - contas anuais
+    secoes: *id012
+- codigo: '12.6'
+  bloco: '12'
+  dimensao: planejamento_contas
+  matriz: comum
+  texto: Divulga o Relatório de Gestão ou Atividades
+  fundamentacao: Art. 8º, §1º, inciso V, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - relatorio de gestao
+      - relatorio de atividades
+      - relatorio anual de gestao
+    secoes: *id012
+- codigo: '13.2'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Autor ou Proponente da Emenda (identificação do parlamentar proponente, com nome completo e opcional indicação do
+    partido e unidade parlamentar)
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      autor:
+      - autor
+      - parlamentar
+      - vereador
+      - deputado
+      - proponente
+    secoes: &id013
+    - emendas
+- codigo: '13.3'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Beneficiário (localidade beneficiada, com indicação do município (ou região/bairro), onde os recursos serão aplicados
+    ou que será beneficiado pelo projeto/ação financiado)
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      beneficiario:
+      - beneficiari
+      - municipio
+      - localidade
+      - bairro
+    secoes: *id013
+- codigo: '13.4'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Objeto da despesa (descrição detalhada do propósito do gasto aprovado na emenda, incluindo a ação governamental,
+    projeto ou atividade a ser executado e sua finalidade específica)
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      objeto:
+      - objeto
+      - finalidade
+      - acao
+      - descricao
+    secoes: *id013
+- codigo: '13.5'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Identificação da Emenda (número de referência ou código único da emenda no orçamento, vinculado ao respectivo ato
+    normativo (LOA ou crédito adicional) que a aprovou
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      identificacao:
+      - numero da emenda
+      - codigo
+      - emenda
+      - numero
+    secoes: *id013
+- codigo: '13.6'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Cronograma físico-financeiro de execução (prazos previstos para a implementação do objeto da emenda, com datas estimadas
+    de início e término, incluindo fases ou etapas intermediárias quando pactuadas em instrumentos como convênios ou planos
+    de trabalho)
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      cronograma:
+      - cronograma
+      - inicio
+      - termino
+      - prazo
+      - execucao
+    secoes: *id013
+- codigo: '13.7'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: 'Instrumentos vinculados: referência a eventuais instrumentos jurídicos celebrados para a execução da emenda, tais
+    como números de convênios, contratos de repasse, termos de fomento ou similares, se existentes, bem como o número do processo
+    administrativo correspondente.'
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      instrumento:
+      - convenio
+      - contrato
+      - instrumento
+    secoes: *id013
+- codigo: '13.8'
+  bloco: '13'
+  dimensao: receita_despesa
+  matriz: comum
+  texto: Valor alocado (montante de recursos previsto na emenda parlamentar)
+  fundamentacao: ADPF nº 854/DF, de 23/10/2025; Deliberação TCE/RJ nº 360/2025, de 18/12/2025; Art. 163º-A da CRFB
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 4
+  verificador: structured_fields
+  params:
+    campos:
+      valor:
+      - valor
+      - montante
+    secoes: *id013
+- codigo: '14.1'
+  bloco: '14'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Indicação da unidade/setor responsável pelo SIC
+  fundamentacao: Arts. 8º, §3º, VII e 9º, I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - servico de informacao ao cidadao
+    - sic
+    - acesso a informacao
+    regex:
+    - \b(setor|unidade|secretaria|controladoria|ouvidoria|coordenadoria|departamento)\b
+    secoes: &id014
+    - sic
+- codigo: '14.2'
+  bloco: '14'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Indicação de endereço físico da unidade responsável pelo SIC
+  fundamentacao: Arts. 8º, §3º, VII e 9º, I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - servico de informacao ao cidadao
+    - sic
+    - acesso a informacao
+    regex:
+    - \b\d{5}-?\d{3}\b|\b(rua|avenida|av\.|praca|praça|estrada|rodovia|travessa|alameda)\b
+    secoes: *id014
+- codigo: '14.3'
+  bloco: '14'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Indicação dos horários de funcionamento da unidade responsável pelo SIC
+  fundamentacao: Arts. 8º, §3º, VII e 9º, I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - servico de informacao ao cidadao
+    - sic
+    - acesso a informacao
+    regex:
+    - \b\d{1,2}\s?h(\d{2})?\s?(as|às|a|-|até)\s?\d{1,2}\s?h|\bhor[aá]rio de (atendimento|funcionamento)\b
+    secoes: *id014
+- codigo: '14.4'
+  bloco: '14'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Indicação de telefone e e-mail da unidade responsável pelo SIC
+  fundamentacao: Arts. 8º, §3º, VII e 9º, I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - servico de informacao ao cidadao
+    - sic
+    - acesso a informacao
+    regex:
+    - \(?\b\d{2}\)?\s?\d{4,5}[-\s]?\d{4}\b|\b0800[\s-]?\d{3}[\s-]?\d{4}\b
+    - '[\w.+-]+@[\w-]+\.[\w.]+'
+    secoes: *id014
+- codigo: '15.1'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Há possibilidade de envio de pedidos de informação de forma eletrônica (e­SIC)
+  fundamentacao: Art. 10º, §2º, da LAI
+  peso: 3
+  essencial: true
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: canal_eletronico
+  params:
+    tipo_url:
+    - esic
+    termos:
+    - e sic
+    - esic
+    - pedido de informacao
+    - solicitar informacao
+    - fala br
+    - falabr
+    secoes:
+    - sic
+- codigo: '15.2'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: 'A solicitação por meio do e­SIC é simples, ou seja, sem a exigência de itens de identificação do requerente que
+    dificultem ou impossibilitem o acesso à informação, tais como: envio de documentos, assinatura reconhecida, declaração
+    de responsabilidade, maioridade. *A exigência de cadastro prévio não configura dificuldade ou impossibilidade de acesso
+    à informação.'
+  fundamentacao: Art. 10º, §1º, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: formulario_esic
+  params:
+    secoes:
+    - sic
+- codigo: '15.3'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Instrumento normativo local que regulamente a LAI.
+  fundamentacao: Art. 45º, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: semantic
+  params:
+    consulta: norma municipal que regulamenta a Lei de Acesso à Informação (decreto ou lei local da LAI)
+    termos:
+    - regulamenta a lei
+    - regulamentacao da lei de acesso
+    - lei 12 527
+    - lei n 12 527
+    - decreto municipal
+    - lei de acesso a informacao
+    secoes: &id015
+    - sic
+- codigo: '15.4'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Divulga, na seção relativa ao e-SIC, os prazos de resposta ao cidadão, incluindo o recursal, e as autoridades competentes
+    para o exame dos pedidos, além do procedimento referente à realização do pedido e de eventual recurso?
+  fundamentacao: Arts. 7º, 15º e 16º, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - prazo
+    - recurso
+    - autoridade
+    regex:
+    - \b(20|vinte)\b.{0,15}\bdias\b|\bprazo\b
+    - \brecurso
+    secoes: *id015
+- codigo: '15.5'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: O ente publica relatório anual estatístico contendo a quantidade de pedidos de acesso recebidos, atendidos, indeferidos,
+    bem como informações genéricas sobre os solicitantes.
+  fundamentacao: Art. 30º, inciso III, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - relatorio estatistico
+      - relatorio anual
+      - estatisticas
+      - relatorio de pedidos
+      - pedidos de acesso
+    secoes: *id015
+- codigo: '15.6'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Existe rol das informações que tenham sido desclassificadas nos últimos 12 (doze) meses.
+  fundamentacao: Art. 30º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - desclassificadas
+    - informacoes desclassificadas
+    - rol de informacoes desclassificadas
+    secoes: *id015
+- codigo: '15.7'
+  bloco: '15'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Lista de documentos classificados em cada grau de sigilo, contendo pelo menos o assunto sobre o qual versa a informação,
+    a categoria na qual ela se encontra, o dispositivo legal que fundamenta a classificação e o respectivo prazo?
+  fundamentacao: Art. 30º, inciso II, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - informacoes classificadas
+    - documentos classificados
+    - grau de sigilo
+    - rol de informacoes classificadas
+    secoes: *id015
+- codigo: '16.1'
+  bloco: '16'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Exibição do “caminho” de páginas percorridas pelo usuário
+  fundamentacao: Art. 8º, §3º, inciso VIII, da LAI, e art. 63º, "caput", e § 1º, da Lei nº 13.146/15, e art. 3º, XIX, da Lei
+    nº 14.129/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: accessibility
+  params:
+    sinal: breadcrumb
+- codigo: '16.2'
+  bloco: '16'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Opção de alto contraste
+  fundamentacao: Art. 8º, §3º, inciso VIII, da LAI, e art. 63º, "caput", e § 1º, da Lei nº 13.146/15, e art. 3º, XIX, da Lei
+    nº 14.129/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: accessibility
+  params:
+    sinal: alto_contraste
+- codigo: '16.3'
+  bloco: '16'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Ferramenta de redimensionamento de texto
+  fundamentacao: Art. 8º, §3º, inciso VIII, da LAI, e art. 63º, "caput", e § 1º, da Lei nº 13.146/15, e art. 3º, XIX, da Lei
+    nº 14.129/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: accessibility
+  params:
+    sinal: ajuste_fonte
+- codigo: '16.4'
+  bloco: '16'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Site oficial e o portal de transparência contêm símbolo de acessibilidade em destaque
+  fundamentacao: Art. 8º, §3º, inciso VIII, da LAI, e art. 63º, "caput", e § 1º, da Lei nº 13.146/15, e art. 3º, XIX, da Lei
+    nº 14.129/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: accessibility
+  params:
+    sinal: simbolo
+- codigo: '16.5'
+  bloco: '16'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Verificação dos itens de acessibilidade por intermédio da ferramenta disponível no endereço https://accessmonitor.acessibilidade.gov.pt/.
+  fundamentacao: Art. 8º, §3º, inciso VIII, da LAI, e art. 63º, "caput", e § 1º, da Lei nº 13.146/15, e art. 3º, XIX, da Lei
+    nº 14.129/2021
+  peso: 2
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: pendente
+  params:
+    motivo: exige a ferramenta externa AccessMonitor (integração prevista)
+- codigo: '17.1'
+  bloco: '17'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Há informações sobre o atendimento presencial pela Ouvidoria. (endereço físico, telefone, e-mail e horário de funcionamento
+    da unidade responsável)
+  fundamentacao: Arts. 7º, 13º e ss. da Lei nº 13.460/17, e art. 9º, II, da LAI
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - ouvidoria
+    regex:
+    - \b\d{5}-?\d{3}\b|\b(rua|avenida|av\.|praca|praça|estrada|rodovia|travessa|alameda)\b
+    - \(?\b\d{2}\)?\s?\d{4,5}[-\s]?\d{4}\b|\b0800[\s-]?\d{3}[\s-]?\d{4}\b|[\w.+-]+@[\w-]+\.[\w.]+
+    - \b\d{1,2}\s?h(\d{2})?\s?(as|às|a|-|até)\s?\d{1,2}\s?h|\bhor[aá]rio de (atendimento|funcionamento)\b
+    secoes:
+    - ouvidoria
+- codigo: '17.2'
+  bloco: '17'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Divulga Carta de Serviços ao Usuário
+  fundamentacao: Arts. 7º, 13º e ss. da Lei nº 13.460/17, e art. 9º, II, da LAI
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - carta de servicos
+    - carta de servicos ao usuario
+    escopo: site
+- codigo: '17.3'
+  bloco: '17'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Há canal eletrônico de acesso/interação com a Ouvidoria
+  fundamentacao: Arts. 7º, 13º e ss. da Lei nº 13.460/17, e art. 9º, II, da LAI
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: canal_eletronico
+  params:
+    tipo_url:
+    - ouvidoria
+    termos:
+    - ouvidoria
+    - fala br
+    - falabr
+    - manifestacao
+    - registrar manifestacao
+    secoes:
+    - ouvidoria
+- codigo: '18.1'
+  bloco: '18'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Identifica o encarregado/responsável pelo tratamento de dados pessoais e disponibiliza Canal de Comunicação (telefone
+    e/ou e-mail)
+  fundamentacao: Arts. 5º, inciso VIII, 23º, inciso III, 41º, §1º, da LGPD; Art. 3º, incisos XVII, da Lei nº 14.129/2021
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - encarregado
+    - dpo
+    - protecao de dados
+    - lgpd
+    - dados pessoais
+    regex:
+    - '[\w.+-]+@[\w-]+\.[\w.]+|\(?\b\d{2}\)?\s?\d{4,5}[-\s]?\d{4}\b|\b0800[\s-]?\d{3}[\s-]?\d{4}\b'
+    secoes:
+    - lgpd_digital
+- codigo: '18.2'
+  bloco: '18'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Possibilita a demanda e o acesso a serviços públicos por meio digital, sem necessidade de solicitação presencial
+  fundamentacao: Arts. 3º, incisos II, III e X, e 14º, da Lei 14.129/2021
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: semantic
+  params:
+    consulta: serviços públicos solicitados e acessados por meio digital, sem atendimento presencial
+    termos:
+    - servicos online
+    - servicos digitais
+    - servicos ao cidadao
+    - portal de servicos
+    - nota fiscal
+    - iptu
+    - emissao
+    - segunda via
+    - agendamento
+    secoes:
+    - lgpd_digital
+- codigo: '18.3'
+  bloco: '18'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Possibilita o acesso automatizado por sistemas externos em dados abertos (estruturados e legíveis por máquina), e
+    a página contém as regras de utilização
+  fundamentacao: Art. 8º, §3º, III, da LAI; Art. 3º, XXV, da Lei nº 14.129/2021
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 1
+  verificador: existence
+  params:
+    termos:
+    - dados abertos
+    - api
+    - licenca
+    escopo: site
+- codigo: '18.4'
+  bloco: '18'
+  dimensao: institucional_acesso
+  matriz: comum
+  texto: Realiza e divulga resultados de pesquisas de satisfação
+  fundamentacao: Art. 23º, §1º e §2º, da Lei nº 13.460/2017, c/c art. 3º, inciso IV, e 24º, inciso II, da Lei 14.129/2021
+  peso: 1
+  essencial: false
+  aplica_a:
+  - comum
+  onda: 3
+  verificador: existence
+  params:
+    termos:
+    - pesquisa de satisfacao
+    - avalie
+    - avaliacao do atendimento
+    - satisfacao
+    escopo: site
+- codigo: '19.1'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência de PPA (Lei do Plano Plurianual)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 1
+  verificador: document
+  params:
+    grupos:
+    - - plano plurianual
+      - ppa
+    secoes: &id016
+    - planejamento_contas
+- codigo: '19.2'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência dos Anexos do PPA
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - anexo
+      - anexos
+    - - plano plurianual
+      - ppa
+    secoes: *id016
+- codigo: '19.3'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência de LDO (Lei do Diretrizes Orçamentárias)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 1
+  verificador: document
+  params:
+    grupos:
+    - - diretrizes orcamentarias
+      - ldo
+    secoes: *id016
+- codigo: '19.4'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência dos Anexos da LDO
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - anexo
+      - anexos
+      - metas fiscais
+      - riscos fiscais
+    - - diretrizes orcamentarias
+      - ldo
+    secoes: *id016
+- codigo: '19.5'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência de LOA (Lei Orçamentária)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 1
+  verificador: document
+  params:
+    grupos:
+    - - lei orcamentaria
+      - loa
+      - orcamento anual
+    secoes: *id016
+- codigo: '19.6'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência dos Anexos da LOA
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - anexo
+      - anexos
+      - quadro de detalhamento
+    - - lei orcamentaria
+      - loa
+    secoes: *id016
+- codigo: '19.7'
+  bloco: '19'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Resultado do julgamento das Contas do Chefe do Poder Executivo pelo Poder Legislativo
+  fundamentacao: Art. 56º, §3º, da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: semantic
+  params:
+    consulta: resultado do julgamento das contas do prefeito pela Câmara Municipal (decreto legislativo)
+    termos:
+    - julgamento das contas
+    - decreto legislativo
+    - contas do prefeito
+    - contas de governo
+    - camara municipal
+    secoes:
+    - planejamento_contas
+- codigo: '20.1'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Relatório Resumido da Execução Orçamentária (RREO)
+  fundamentacao: Art. 48º, "caput", da LC nº 101/00
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 1
+  verificador: document
+  params:
+    grupos:
+    - - relatorio resumido da execucao orcamentaria
+      - rreo
+    secoes: &id018
+    - rreo
+- codigo: '20.2'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência de informações atualizadas (RREO)
+  fundamentacao: Art. 8º, §3º, inciso VI, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 2
+  verificador: freshness
+  params:
+    secoes:
+    - rreo
+    filtro: &id017
+    - relatorio resumido da execucao orcamentaria
+    - rreo
+    referencia: bimestral
+- codigo: '20.3'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Existência de histórico das informações (RREO)
+  fundamentacao: Arts. 7º, incisos II e VI e 8º, "caput", da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 2
+  verificador: history
+  params:
+    secoes:
+    - rreo
+    filtro: *id017
+- codigo: '20.4'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Ferramenta de pesquisa específica (que permita pesquisar dentro deste conjunto de informações, possibilitando filtros
+    específicos) (RREO)
+  fundamentacao: Art. 8º, §3º, inciso I, da LAI
+  peso: 2
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 2
+  verificador: search_filter
+  params:
+    secoes:
+    - rreo
+- codigo: '20.5'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Publica o Balanço Orçamentário
+  fundamentacao: Art. 48, §2º, da LC nº 101/00; Arts. 101 a 104, da Lei nº 4.320/1964; MCASP - Parte V; Normas contábeis aplicadas
+    ao setor público
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - balanco orcamentario
+    secoes: *id018
+- codigo: '20.6'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Publica o Balanço Financeiro
+  fundamentacao: Art. 48, §2º, da LC nº 101/00; Arts. 101 a 104, da Lei nº 4.320/1964; MCASP - Parte V; Normas contábeis aplicadas
+    ao setor público
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - balanco financeiro
+    secoes: *id018
+- codigo: '20.7'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Publica o Balanço Patrimonial
+  fundamentacao: Art. 48, §2º, da LC nº 101/00; Arts. 101 a 104, da Lei nº 4.320/1964; MCASP - Parte V; Normas contábeis aplicadas
+    ao setor público
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - balanco patrimonial
+    secoes: *id018
+- codigo: '20.8'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Publica a Demonstração das Variações Patrimoniais
+  fundamentacao: Art. 48, §2º, da LC nº 101/00; Arts. 101 a 104, da Lei nº 4.320/1964; MCASP - Parte V; Normas contábeis aplicadas
+    ao setor público
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - variacoes patrimoniais
+      - dvp
+    secoes: *id018
+- codigo: '20.9'
+  bloco: '20'
+  dimensao: planejamento_contas
+  matriz: executivo
+  texto: Publica a Demonstração do Fluxo de Caixa
+  fundamentacao: Art. 48, §2º, da LC nº 101/00; Arts. 101 a 104, da Lei nº 4.320/1964; MCASP - Parte V; Normas contábeis aplicadas
+    ao setor público
+  peso: 3
+  essencial: true
+  aplica_a:
+  - executivo
+  onda: 3
+  verificador: document
+  params:
+    grupos:
+    - - fluxo de caixa
+      - dfc
+    secoes: *id018
+- codigo: '21.1'
+  bloco: '21'
+  dimensao: institucional_acesso
+  matriz: executivo
+  texto: Divulga informações relacionadas aos serviços de saúde, indicando os horários, os profissionais prestadores de serviços,
+    as especialidades e local (Executivo Municipal)
+  fundamentacao: Art. 7º, VI, da Lei nº 8.080/1990
+  peso: 1
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 4
+  verificador: semantic
+  params:
+    consulta: 'serviços de saúde: unidades, horários, profissionais e especialidades'
+    termos:
+    - unidades de saude
+    - especialidades
+    - ubs
+    - profissionais de saude
+    - escala medica
+    - horario de atendimento
+    secoes: &id019
+    - boas_praticas
+- codigo: '21.2'
+  bloco: '21'
+  dimensao: institucional_acesso
+  matriz: executivo
+  texto: Divulga os estoques de medicamentos das farmácias públicas
+  fundamentacao: Art. 6º-A, da Lei nº 8.080/1990 (alterada pela Lei nº 14.654/2023)
+  peso: 1
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 4
+  verificador: semantic
+  params:
+    consulta: estoque de medicamentos das farmácias públicas municipais
+    termos:
+    - estoque de medicamentos
+    - remume
+    - farmacia
+    - medicamentos disponiveis
+    secoes: *id019
+- codigo: '21.3'
+  bloco: '21'
+  dimensao: institucional_acesso
+  matriz: executivo
+  texto: Divulga a lista de espera em creches públicas e os critérios de priorização de acesso a elas (Executivo Municipal)
+  fundamentacao: Art. 37º, "caput", da CF; Art. 8º, §1º, V, da LAI; Art. 5º, §1º, IV, da Lei nº 9.394/96 (LDB, alterada pela
+    Lei nº 14.685/23)
+  peso: 1
+  essencial: false
+  aplica_a:
+  - executivo_municipal
+  onda: 4
+  verificador: semantic
+  params:
+    consulta: lista de espera de vagas em creches públicas e critérios de prioridade
+    termos:
+    - lista de espera
+    - fila de creche
+    - creche
+    - vagas em creches
+    - educacao infantil
+    secoes: *id019
+- codigo: '21.4'
+  bloco: '21'
+  dimensao: institucional_acesso
+  matriz: executivo
+  texto: Divulga a lista dos inscritos em dívida ativa, contendo, no mínimo, dados referentes ao nome do inscrito e o valor
+    total da dívida
+  fundamentacao: Art. 198º, § 3º, II, da Lei nº 5.172/1966
+  peso: 1
+  essencial: false
+  aplica_a:
+  - executivo
+  onda: 4
+  verificador: existence
+  params:
+    termos:
+    - divida ativa
+    - inscritos em divida ativa
+    - devedores
+    regex:
+    - \bd[ií]vida ativa\b
+    secoes: *id019

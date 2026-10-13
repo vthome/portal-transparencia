@@ -124,6 +124,19 @@ def checar_banco(dsn: str) -> list[Check]:
                               join pg_namespace n on n.oid = e.extnamespace where e.extname = 'vector'""").fetchone()
         out.append(Check("pgvector", bool(vec), f"schema {vec[0]}, versão {vec[1]}" if vec else
                          "não instalado (necessário na Camada 2)", bloqueante=False))
+        # Camada 2 (schema v0.3): não bloqueia a coleta, mas avisa antes de rodar a conclusão
+        v03 = {"texto_hash"} <= cols.get("chunk", set()) and {"sinais"} <= cols.get("criterion_result", set()) \
+            and {"engine_version", "modelo_embedding"} <= cols.get("evaluation", set())
+        out.append(Check("schema v0.3 (Camada 2)", v03, "ok" if v03 else "rode sql/schema.sql de novo",
+                         bloqueante=False))
+        dim = conn.execute("""select atttypmod from pg_attribute
+                              where attrelid = 'monitor.chunk'::regclass and attname = 'embedding'""").fetchone()
+        dim = dim[0] if dim else None
+        esperado = get_settings().embeddings_dim
+        out.append(Check("dimensão dos embeddings", dim == esperado,
+                         f"monitor.chunk.embedding = vector({dim}), EMBEDDINGS_DIM = {esperado}" if dim == esperado else
+                         f"coluna vector({dim}) ≠ EMBEDDINGS_DIM={esperado}: rode sql/schema.sql v0.3 "
+                         "(com monitor.chunk vazia) ou ajuste EMBEDDINGS_DIM", bloqueante=False))
         n_ent = conn.execute("select count(*) from monitor.entity").fetchone()[0]
         n_run = conn.execute("select count(*) from monitor.run").fetchone()[0]
         out.append(Check("dados existentes", True, f"{n_ent} entes, {n_run} rodadas", bloqueante=False))

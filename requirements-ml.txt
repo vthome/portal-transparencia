@@ -1,0 +1,7 @@
+# Camada 2 — modelo de embeddings (pesado: instala o PyTorch).
+#   pip install -r requirements-ml.txt
+# Só CPU (menor, recomendado no Windows sem GPU e no GitHub Actions):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements-ml.txt
+-r requirements.txt
+sentence-transformers>=3.0
