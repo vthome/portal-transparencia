@@ -1,0 +1,6 @@
+# Dependências do dashboard — é este arquivo que o Streamlit Cloud instala (fica ao lado do app.py).
+# Enxuto de propósito: o dashboard só conversa com a API, não precisa de banco, coleta nem modelos.
+streamlit>=1.46,<2
+plotly>=5.24
+pandas>=2.2
+requests>=2.32

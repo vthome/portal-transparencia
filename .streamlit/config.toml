@@ -1,0 +1,9 @@
+# Configuração do Streamlit (local e Streamlit Cloud).
+[theme]
+primaryColor = "#2a78d6"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

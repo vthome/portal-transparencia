@@ -7,6 +7,7 @@ from ingestion.transform.parse_files import parse_file
 from ingestion.transform.parse_html import parse_html
 from tests.helpers import page
 
+
 def _res(url, html, headers=None):
     return FetchResult(url=url, url_final=url, status=200, content=html.encode(),
                        content_type="text/html; charset=utf-8", headers=headers or {})

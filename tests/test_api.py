@@ -80,6 +80,17 @@ class FakeRepo:
         rv = {r["resultado_id"]: r["status_corrigido"] for r in self.revs}
         return [{**r, "status_revisado": rv.get(r["id"], r["status_revisado"])} for r in self.res[avaliacao_id]]
 
+    def timeline(self, slug, codigo):
+        out = []
+        for av in self.avs:
+            for r in self.resultados(av["avaliacao_id"]):
+                if r["codigo"] == codigo:
+                    out.append({"run_id": av["run_id"], "avaliado_em": AGORA, "resultado_id": r["id"],
+                                "status": r["status"], "nota": r["nota"], "confianca": r["confianca"],
+                                "metodo": r["metodo"], "justificativa": r["justificativa"],
+                                "status_revisado": r["status_revisado"]})
+        return out
+
     def resultado(self, rid):
         for av_id, rs in self.res.items():
             for r in self.resultados(av_id):
@@ -101,7 +112,10 @@ class FakeRepo:
 
     def fila(self, limiar, slug, incluir_nv, limite):
         self.ultimo_limiar = limiar
-        return [r for r in self.resultados(20) if r["confianca"] is not None and r["confianca"] < limiar][:limite]
+        return [{**r, "slug": "rj-teste", "run_id": 2} for r in self.resultados(20)
+                if not r["status_revisado"] and r["metodo"] != "pendente"
+                and ((r["confianca"] is not None and r["confianca"] < limiar)
+                     or (incluir_nv and r["status"] == "nao_verificavel"))][:limite]
 
     def inserir_revisao(self, rid, status, revisor, comentario):
         rv = {"id": len(self.revs) + 1, "resultado_id": rid, "revisor": revisor, "status_corrigido": status,
@@ -110,17 +124,28 @@ class FakeRepo:
         return rv
 
     def revisoes(self, slug, limite):
-        return [{**r, "concordou": False, "verificador": "existence", "confianca": 0.4} for r in self.revs]
+        out = []
+        for r in self.revs:
+            res = self.resultado(r["resultado_id"])
+            out.append({**r, "slug": "rj-teste", "run_id": res["run_id"], "codigo": res["codigo"],
+                        "status_motor": res["status"], "concordou": r["status_corrigido"] == res["status"],
+                        "confianca": res["confianca"], "metodo": res["metodo"], "verificador": "existence"})
+        return out
 
     def rodadas(self, limite):
-        return [{"run_id": 2}]
+        return [{"run_id": 2, "gatilho": "manual", "status": "concluido", "iniciado_em": AGORA,
+                 "finalizado_em": AGORA, "entes": 1, "concluidos": 1, "parciais": 0, "falhas": 0, "paginas": 40,
+                 "arquivos": 5, "bytes": 1000, "avaliacoes": 1}]
 
     def rodada(self, run_id):
-        return [{"slug": "rj-teste"}] if run_id == 2 else []
+        return [{"slug": "rj-teste", "status": "concluido", "paginas": 40, "arquivos": 5, "bloqueios_robots": 0,
+                 "secoes_ausentes": ["obras"], "segundos": 12.5}] if run_id == 2 else []
 
     def checklist(self):
-        return [{"codigo": "10.2", "dimensao": "pessoal", "verificador": "x"},
-                {"codigo": "2.1", "dimensao": "pessoal", "verificador": "x"}]
+        base = {"versao": "checklistPortalTransp teste", "bloco": "2", "matriz": "comum", "texto": "quesito",
+                "fundamentacao": "LAI", "peso": 2, "essencial": False, "aplica_a": ["comum"], "onda": 1}
+        return [{**base, "codigo": "10.2", "dimensao": "pessoal", "verificador": "x"},
+                {**base, "codigo": "2.1", "dimensao": "pessoal", "verificador": "x"}]
 
     def busca_texto(self, q, slug, k):
         return [{"trecho_id": 1, "slug": "rj-teste", "run_id": 2, "texto": f"... {q} ...", "relevancia": 0.5}]
@@ -334,7 +359,7 @@ def test_assinador_monta_url_do_supabase():
 
 
 def test_monitoramento_checklist_e_token_de_leitura(cli, repo):
-    assert cli.get("/rodadas/2").json() == [{"slug": "rj-teste"}] and cli.get("/rodadas/3").status_code == 404
+    assert cli.get("/rodadas/2").json()[0]["slug"] == "rj-teste" and cli.get("/rodadas/3").status_code == 404
     assert [c["codigo"] for c in cli.get("/checklist").json()] == ["2.1", "10.2"]
     with TestClient(create_app(cfg(database_url=None, token_leitura="L"), repo=repo)) as c:
         assert c.get("/entes").status_code == 401 and c.get("/health").status_code == 200

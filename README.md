@@ -17,7 +17,7 @@ Coleta e conclusão são separadas: regras novas reavaliam snapshots antigos sem
 | 1. Coleta | implementada — [docs/01-coleta.md](docs/01-coleta.md) |
 | 2. Conclusão | implementada — [docs/02-conclusao.md](docs/02-conclusao.md) |
 | 3. API (FastAPI · Render) | implementada — [docs/03-api.md](docs/03-api.md) |
-| 3. Dashboard (Streamlit) | a fazer |
+| 3. Dashboard (Streamlit Cloud) | implementado — [docs/04-dashboard.md](docs/04-dashboard.md) |
 
 ## Rodando
 
@@ -44,6 +44,9 @@ python -m compliance.calibrar          # recalibra a confiança com as revisões
 # API (Camada 3) — reaplique sql/schema.sql (v0.4); deploy no Render pelo render.yaml
 .\scripts\api.ps1                     # http://127.0.0.1:8000/docs
 python scripts/testar_api.py --url https://<seu-servico>.onrender.com
+
+# dashboard (Camada 3) — só conversa com a API
+.\scripts\dashboard.ps1 -Api https://<seu-servico>.onrender.com   # http://localhost:8501
 ```
 
 ## Estrutura
@@ -61,16 +64,20 @@ compliance/
   config/        criteria.yaml (142 quesitos), scoring.yaml, checklistPortalTransp.xlsx
   checkers/      existencia, estruturados, documentos, acessibilidade, semantico (+ base)
   coleta.py, checklist.py, confidence.py, scoring.py, engine.py, repo.py, pipeline.py, report.py, calibrar.py
+dashboard/       app.py (Streamlit), requirements.txt (Streamlit Cloud)
+  painel/        config, cliente da API, cache, formatos, gráficos (Plotly), ui
+  paginas/       visao_geral, municipio, evolucao, revisao, busca, monitoramento
 api/
   main.py, config.py, database.py, deps.py, schemas.py, servicos.py
   routers/       entes, indicadores, avaliacoes, revisoes, documentos, monitoramento
-scripts/         coleta.ps1/.sh, conclusao.ps1/.sh, api.ps1/.sh, testar_api.py, importar_checklist.py
+scripts/         coleta, conclusao, api, dashboard (.ps1/.sh), testar_api.py, importar_checklist.py
+.streamlit/      config.toml, secrets.toml.example
 sql/schema.sql   schema `monitor` v0.4 (v0.1 + coleta + Camada 2 + índices da API)
 sql/api_role.sql usuário restrito para a API (lê tudo, grava só revisões)
 render.yaml      Blueprint do Render (API) · requirements-api.txt · .python-version
 tests/           offline (site falso) + integração Postgres no CI
 .github/workflows/ ci.yml, coleta.yml (dias 1 e 15), conclusao.yml (após cada coleta)
-docs/01-coleta.md, docs/02-conclusao.md, docs/03-api.md
+docs/01-coleta.md, docs/02-conclusao.md, docs/03-api.md, docs/04-dashboard.md
 ```
 
 ## Política de coleta

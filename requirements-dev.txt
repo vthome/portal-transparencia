@@ -4,3 +4,4 @@ reportlab>=4.2            # gera PDFs de teste
 ruff>=0.5
 -r requirements-api.txt   # API (FastAPI) e seus testes
 httpx>=0.27               # TestClient do FastAPI
+-r dashboard/requirements.txt  # dashboard (Streamlit) e seus testes
