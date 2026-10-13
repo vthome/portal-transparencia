@@ -1,0 +1,35 @@
+# Blueprint do Render: New + > Blueprint > escolha este repositório.
+# Na criação, o painel pede os valores marcados com `sync: false`.
+services:
+  - type: web
+    name: monitor-transparencia-api
+    runtime: python
+    plan: free                      # dorme após ~15 min sem uso; a 1ª chamada depois leva ~1 min
+    region: virginia                # a mais próxima do Supabase sa-east-1 entre as regiões do Render
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    buildFilter:                    # não redeploya por mudança só em docs, testes, coleta ou dashboard
+      ignoredPaths:
+        - docs/**
+        - tests/**
+        - dashboard/**
+        - scripts/**
+        - .github/**
+        - "**/*.md"
+    envVars:
+      - key: DATABASE_URL           # Supabase > Connect > Session pooler (porta 5432); de preferência o usuário monitor_api
+        sync: false
+      - key: API_TOKEN_REVISAO      # gerado pelo Render; copie para os secrets do Streamlit
+        generateValue: true
+      - key: SUPABASE_URL           # links assinados de screenshots/PDFs (opcional)
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: snapshots
+      - key: API_BUSCA              # texto (cabe no plano free) | modelo (SERAFIM, ~1,5 GB de RAM)
+        value: texto
+      - key: API_POOL_MAX
+        value: "4"
