@@ -21,8 +21,9 @@ Streamlit Cloud ──HTTP──► FastAPI (Render) ──SQL──► Supabase
    - Para trocar a senha depois: `alter role monitor_api password '...';` e atualize o `DATABASE_URL` no Render.
 3. **Connection string** em Supabase → **Connect** → **Session pooler** (porta 5432). Com o usuário restrito, o usuário no pooler leva o sufixo do projeto:
    ```
-   postgresql://monitor_api.<PROJECT_REF>:<SENHA>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres
+   postgresql://monitor_api.<PROJECT_REF>:<SENHA>@<HOST>:5432/postgres
    ```
+   `<HOST>` é **exatamente** o da `DATABASE_URL` do `.env` (ex.: `aws-1-sa-east-1.pooler.supabase.com` — o número varia por projeto). Host errado dá `tenant/user ... not found`.
    Sem o `api_role.sql`, use a mesma `DATABASE_URL` da coleta (usuário `postgres`).
 
 ## 2. Rodar localmente

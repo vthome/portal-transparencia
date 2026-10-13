@@ -7,7 +7,6 @@
 Gera data/runs/<run_id>-relatorio.md e imprime o mesmo conteúdo. O pipeline chama
 `gerar_relatorio` automaticamente ao final de cada rodada.
 """
-
 from __future__ import annotations
 
 import argparse
@@ -33,7 +32,10 @@ def coletar(repo: Repository, run_id: str) -> dict[str, Any]:
     erros: dict[str, list[str]] = defaultdict(list)
     for r in repo.run_top_erros(run_id):
         erros[r["slug"]].append(f"{r['erro']} ({r['n']})")
-    return {"jobs": jobs, "stats": stats, "render": render, "erros": erros}
+    hosts: dict[str, list[dict]] = defaultdict(list)
+    for r in repo.run_paginas_por_host(run_id):
+        hosts[r["slug"]].append(r)
+    return {"jobs": jobs, "stats": stats, "render": render, "erros": erros, "hosts": hosts}
 
 
 def criterios(dados: dict[str, Any], esperados: list[str]) -> list[tuple[str, bool, str]]:
@@ -72,6 +74,16 @@ def renderizar(run_id: str, dados: dict[str, Any], esperados: list[str]) -> str:
             f"| {j['slug']} | {j.get('status')} | {j.get('plataforma_detectada') or '—'} | {j.get('paginas') or 0} | "
             f"{dist} | {j.get('arquivos') or 0} | {dados['render'].get(j['slug'], 0)} | "
             f"{len(j.get('secoes_encontradas') or [])}/{total_secoes} | {j.get('duracao_s') or 0:.0f} |")
+
+    linhas += ["", "## Páginas por host", "",
+               "Para onde foi o orçamento. Portal com poucas páginas e site com muitas indica menu "
+               "não reconhecido ou portal fora do escopo.", "",
+               "| Ente | Host | Páginas | ok | Portal |", "| --- | --- | ---: | ---: | :---: |"]
+    for j in jobs:
+        portais = {h for h, f in (j.get("fingerprint") or {}).items() if isinstance(f, dict) and f.get("portal")}
+        for h in dados["hosts"].get(j["slug"], []):
+            linhas.append(f"| {j['slug']} | {h['host']} | {h['paginas']} | {h['ok']} | "
+                          f"{'sim' if h['host'] in portais else ''} |")
 
     linhas += ["", "## Seções não encontradas", ""]
     for j in jobs:

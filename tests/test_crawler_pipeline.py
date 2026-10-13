@@ -237,7 +237,7 @@ def test_pipeline_um_ente_falhando_nao_derruba_os_outros(tmp_path):
 
 
 # ------------------------------------------------------------------ storage
-### REVISAR AQUI!
+
 def test_supabase_storage_trata_duplicado_como_sucesso():
     import requests
 
@@ -265,7 +265,7 @@ def test_supabase_storage_trata_duplicado_como_sucesso():
     assert st.uploads == 1
     assert "/object/coleta/html/" in calls[0][1]          # layout html/ · png/ · files/
 
-## REVISAR AQUI!
+
 def test_supabase_chave_nova_vai_so_no_apikey():
     novo = SupabaseStorage("https://abc.supabase.co", "sb_secret_xyz", "snapshots")
     assert novo.http.headers["apikey"] == "sb_secret_xyz" and "Authorization" not in novo.http.headers

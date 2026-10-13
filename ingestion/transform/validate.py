@@ -6,7 +6,6 @@ Dois papéis distintos:
 2. `classify_page`: decide se o que veio do servidor serve como evidência
    (ok / vazio / soft404). Uma página "Em construção" com HTTP 200 não pode virar "Atende".
 """
-
 from __future__ import annotations
 
 import re
@@ -27,7 +26,8 @@ from ingestion.models import Entity
 from ingestion.settings import CONFIG_DIR
 from ingestion.transform.normalize import normalize_text
 
-URL_TIPOS = {"site_oficial", "portal_transparencia", "esic", "ouvidoria", "dados_abertos", "outro"}
+URL_TIPOS = {"site_oficial", "portal_transparencia", "esic", "ouvidoria", "diario_oficial", "dados_abertos",
+             "lgpd", "outro"}
 
 
 class ConfigError(ValueError):

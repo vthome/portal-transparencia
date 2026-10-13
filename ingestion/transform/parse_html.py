@@ -4,7 +4,6 @@ O resultado (`ParsedPage.to_dict()`) vai para `page_snapshot.extraido` e é o in
 verificadores da Camada 2: links (navegação), tabelas (dados estruturados), formulários
 (busca, e-SIC), breadcrumbs e sinais de acessibilidade, datas (atualidade).
 """
-
 from __future__ import annotations
 
 import re
@@ -81,6 +80,7 @@ class ParsedPage:
     botoes_exportacao: list[str] = field(default_factory=list)
     iframes: list[str] = field(default_factory=list)
     n_scripts: int = 0
+    links_javascript: int = 0        # <a> sem destino recuperável (javascript:, "#", vazio)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -108,7 +108,7 @@ def parse_html(html: str, base_url: str) -> ParsedPage:
     idioma = html_tag.get("lang") if isinstance(html_tag, Tag) else None
 
     acess = _acessibilidade(soup)
-    links = _links(soup, base_url)
+    links, n_js = _links(soup, base_url)
     forms = _formularios(soup, base_url)
     breadcrumbs = _breadcrumbs(soup)
     iframes = [u for u in (normalize_url(f.get("src", ""), base_url) for f in soup.find_all("iframe")) if u]
@@ -129,39 +129,101 @@ def parse_html(html: str, base_url: str) -> ParsedPage:
         atualiz += [d.isoformat() for d in parse_dates_br(m.group(2).replace(" ", "/"))]
     atualiz += [d.isoformat() for d in parse_dates_br(" ".join(
         re.findall(r"[Aa]tualizad[oa]s?\s+em:?\s*([0-9/.\-]{8,10})", texto)))]
-   # exportacao = sorted({m.lower() for l in links for m in _EXPORT.findall(l.texto + " " + (l.arquivo or ""))})
-    exportacao = sorted({m.lower() for link in links for m in _EXPORT.findall(link.texto + " " + (link.arquivo or ""))})
+    exportacao = sorted({m.lower() for l in links for m in _EXPORT.findall(l.texto + " " + (l.arquivo or ""))})
 
     return ParsedPage(
         titulo=titulo, h1=h1, headings=headings, texto=texto, idioma=idioma, meta=meta,
         links=links, tabelas=tabelas, formularios=forms, breadcrumbs=breadcrumbs,
         datas=datas, datas_atualizacao=sorted(set(atualiz), reverse=True),
         acessibilidade=acess, botoes_exportacao=exportacao, iframes=iframes, n_scripts=n_scripts,
+        links_javascript=n_js,
     )
 
 
-def _links(soup: BeautifulSoup, base_url: str) -> list[Link]:
+# URL dentro de handlers JS: window.open('...'), location.href = '...', location.assign("...")
+_JS_NAV = re.compile(
+    r"(?:window\.open|location(?:\.href)?\s*=|location\.(?:assign|replace)|navigateByUrl|navigate)"
+    r"\s*\(?\s*\[?\s*['\"]([^'\"]+)['\"]", re.I)
+_JS_URL_SOLTA = re.compile(r"['\"]((?:https?://|/)[^'\"\s]{2,})['\"]")
+_ATTRS_URL = ("data-href", "data-url", "data-link", "data-target-url", "data-src-url")
+
+
+def _url_de_handler(js: str | None) -> str | None:
+    if not js:
+        return None
+    m = _JS_NAV.search(js) or _JS_URL_SOLTA.search(js)
+    return m.group(1) if m else None
+
+
+def _destino(el: Tag) -> str | None:
+    """Destino navegável de um elemento: href real, atributos data-* ou handler onclick."""
+    href = (el.get("href") or "").strip()
+    if href and not href.lower().startswith("javascript:") and href != "#":
+        return href
+    for attr in _ATTRS_URL:
+        if el.get(attr):
+            return el[attr]
+    return _url_de_handler(el.get("onclick"))
+
+
+def _links(soup: BeautifulSoup, base_url: str) -> tuple[list[Link], int]:
+    """Links navegáveis da página + quantos <a> ficaram sem destino recuperável.
+
+    Além de href, recupera destinos de `onclick` (window.open, location.href...), de
+    atributos `data-href`/`data-url` e de <select> usados como menu de navegação — padrões
+    comuns em portais municipais. O contador de links "mortos" diz ao crawler quando vale
+    renderizar a página para obter o menu montado por JavaScript.
+    """
     out: dict[str, Link] = {}
     topo = set()
     for zona in soup.select("header, nav, [role=navigation], #menu, .menu, .navbar"):
-        topo.update(id(a) for a in zona.find_all("a"))
-    for i, a in enumerate(soup.find_all("a")):
-        href = a.get("href") or a.get("data-href") or ""
-        url = normalize_url(href, base_url)
+        topo.update(id(a) for a in zona.find_all(True))
+    n_js = 0
+
+    def add(el: Tag, bruto: str | None, i: int, texto: str | None = None) -> None:
+        url = normalize_url(bruto or "", base_url)
         if not url:
-            continue
-        texto = _txt(a) or a.get("title") or a.get("aria-label") or ""
-        if not texto:
-            img = a.find("img")
-            texto = (img.get("alt") or "") if isinstance(img, Tag) else ""
+            return
+        if texto is None:
+            texto = _txt(el) or el.get("title") or el.get("aria-label") or ""
+            if not texto:
+                img = el.find("img")
+                texto = (img.get("alt") or "") if isinstance(img, Tag) else ""
         ext = extension_of(url)
         link = Link(url=url, texto=texto[:200], arquivo=ext if ext in ARQUIVO_EXT else None,
-                    na_capa_topo=id(a) in topo or i < 40, title=a.get("title"))
+                    na_capa_topo=id(el) in topo or i < 40, title=el.get("title"))
         if url not in out or (not out[url].texto and link.texto):
             out[url] = link
+
+    for i, a in enumerate(soup.find_all("a")):
+        destino = _destino(a)
+        if destino:
+            add(a, destino, i)
+        else:
+            n_js += 1
+        if len(out) >= MAX_LINKS:
+            return list(out.values()), n_js
+
+    # elementos clicáveis que não são <a> (botões, cards, itens de menu)
+    for i, el in enumerate(soup.select("[onclick], [data-href], [data-url], [data-link]")):
+        if el.name == "a":
+            continue
+        destino = _destino(el)
+        if destino:
+            add(el, destino, i)
+        if len(out) >= MAX_LINKS:
+            return list(out.values()), n_js
+
+    # <select> como menu ("Selecione o relatório..."): opções com URL
+    for sel in soup.find_all("select"):
+        nav = bool(re.search(r"location|window\.open|navigate", sel.get("onchange") or "", re.I))
+        for i, op in enumerate(sel.find_all("option")):
+            v = (op.get("value") or "").strip()
+            if v and (nav or v.startswith(("http://", "https://", "/"))) and not v.isdigit():
+                add(op, v, 99, texto=_txt(op))
         if len(out) >= MAX_LINKS:
             break
-    return list(out.values())
+    return list(out.values()), n_js
 
 
 def _tabela(t: Tag) -> Tabela:

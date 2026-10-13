@@ -7,7 +7,6 @@
 Ambas são *append-only* para snapshots e arquivos: nada coletado é sobrescrito, o que
 garante a trilha de auditoria e permite reavaliar coletas antigas com regras novas.
 """
-
 from __future__ import annotations
 
 import json
@@ -45,6 +44,7 @@ class Repository(Protocol):
     def run_jobs(self, run_id: str) -> list[dict[str, Any]]: ...
     def run_snapshot_stats(self, run_id: str) -> list[dict[str, Any]]: ...
     def run_top_erros(self, run_id: str, limite: int = 5) -> list[dict[str, Any]]: ...
+    def run_paginas_por_host(self, run_id: str) -> list[dict[str, Any]]: ...
     def snapshots_para_reextrair(self, run_id: str, parser_version: int | None) -> list[dict[str, Any]]: ...
     def atualizar_extracao(self, snapshot_id: str, coleta_status: str, titulo: str | None,
                            secoes: list[str], extraido: dict[str, Any]) -> None: ...
@@ -173,7 +173,7 @@ class LocalRepository:
                         **{k: j.get(k) for k in ("status", "plataforma_detectada", "paginas", "arquivos",
                                                  "requisicoes", "renderizacoes", "bloqueios_robots",
                                                  "paginas_inalteradas", "secoes_encontradas",
-                                                 "secoes_ausentes", "duracao_s", "erro")}})
+                                                 "secoes_ausentes", "duracao_s", "erro", "fingerprint")}})
         return out
 
     def _snaps(self, run_id):
@@ -197,6 +197,17 @@ class LocalRepository:
                 cont[k] = cont.get(k, 0) + 1
         rows = [{"slug": k[0], "erro": k[1], "n": n} for k, n in cont.items()]
         return sorted(rows, key=lambda r: (r["slug"], -r["n"]))
+
+    def run_paginas_por_host(self, run_id):
+        from ingestion.transform.normalize import host_of
+
+        cont: dict[tuple, dict] = {}
+        for slug, p in self._snaps(run_id):
+            k = (slug, host_of(p["url"]))
+            c = cont.setdefault(k, {"slug": slug, "host": k[1], "paginas": 0, "ok": 0})
+            c["paginas"] += 1
+            c["ok"] += 1 if p["coleta_status"] == "ok" else 0
+        return sorted(cont.values(), key=lambda r: (r["slug"], -r["paginas"]))
 
     def snapshots_para_reextrair(self, run_id, parser_version):
         out = []
@@ -428,7 +439,7 @@ class PostgresRepository:
             """select j.id::text as job_id, e.slug, e.nome, j.status::text as status, j.plataforma_detectada,
                       j.paginas, j.arquivos, j.requisicoes, j.renderizacoes, j.bloqueios_robots,
                       j.paginas_inalteradas, j.secoes_encontradas, j.secoes_ausentes,
-                      j.segundos::float as duracao_s, j.erro
+                      j.segundos::float as duracao_s, j.erro, j.fingerprint
                from monitor.crawl_job j join monitor.entity e on e.id = j.entity_id
                where j.run_id = %s order by e.slug""", (int(run_id),))
         for r in rows:  # mesmo vocabulário do LocalRepository
@@ -452,6 +463,15 @@ class PostgresRepository:
                  join monitor.entity e on e.id = j.entity_id
                  where j.run_id = %s and p.erro is not null group by 1, 2) t
                where rk <= %s order by slug, n desc""", (int(run_id), limite))
+
+    def run_paginas_por_host(self, run_id):
+        return self._dicts(
+            """select e.slug, lower(split_part(split_part(split_part(split_part(p.url, '://', 2), '/', 1), '#', 1), ':', 1)) as host,
+                      count(*)::int as paginas,
+                      count(*) filter (where p.coleta_status = 'ok')::int as ok
+               from monitor.page_snapshot p join monitor.crawl_job j on j.id = p.crawl_job_id
+               join monitor.entity e on e.id = j.entity_id
+               where j.run_id = %s group by 1, 2 order by 1, 3 desc""", (int(run_id),))
 
     def snapshots_para_reextrair(self, run_id, parser_version):
         return self._dicts(

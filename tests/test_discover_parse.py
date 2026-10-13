@@ -12,6 +12,7 @@ def _res(url, html, headers=None):
     return FetchResult(url=url, url_final=url, status=200, content=html.encode(),
                        content_type="text/html; charset=utf-8", headers=headers or {})
 
+
 # ------------------------------------------------------------------ fingerprint
 
 def test_fingerprint_wordpress():
@@ -118,8 +119,7 @@ def test_parse_html_estrutura_completa():
     assert {c.nome for c in f.campos} == {"ano", "q"} and f.campos[0].rotulo == "Exercício" and f.campos[0].opcoes == 2
     assert "2026-10-05" in p.datas_atualizacao
     assert {"csv", "xlsx"} <= set(p.botoes_exportacao)
-    #arquivos = {l.url: l.arquivo for l in p.links if l.arquivo}
-    arquivos = {link.url: link.arquivo for link in p.links if link.arquivo}
+    arquivos = {l.url: l.arquivo for l in p.links if l.arquivo}
     assert arquivos["https://transparencia.exemplo.rj.gov.br/despesas.csv"] == "csv"
     a = p.acessibilidade
     assert a["alto_contraste"] and a["ajuste_fonte"] and a["skip_link"] and a["accesskeys"] == 1
@@ -138,11 +138,8 @@ def _pdf_bytes(linhas):
     c = canvas.Canvas(buf, pagesize=A4)
     c.setTitle("RREO 4o bimestre 2026")
     y = 800
-    # for l in linhas:
-    #     c.drawString(50, y, l)
-    #     y -= 20
-    for linha in linhas:
-        c.drawString(50, y, linha)
+    for l in linhas:
+        c.drawString(50, y, l)
         y -= 20
     c.showPage()
     c.drawString(50, 800, "Página 2")

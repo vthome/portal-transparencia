@@ -1,21 +1,35 @@
 -- =====================================================================
 -- Usuário de banco só para a API (Render) — opcional, recomendado.
--- Lê o schema `monitor` e só pode GRAVAR revisões humanas. Se a chave vazar,
+-- Lê o schema `monitor` e só pode GRAVAR revisões humanas. Se a senha vazar,
 -- ninguém apaga coletas nem avaliações.
 --
--- 1. Troque a senha abaixo (e guarde-a: vai no DATABASE_URL do Render).
--- 2. Rode este arquivo no SQL Editor do Supabase (depois do sql/schema.sql).
--- 3. DATABASE_URL no Render (Session pooler, porta 5432):
---    postgresql://monitor_api.<PROJECT_REF>:<SENHA>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres
---    (no pooler, o usuário leva o sufixo .<PROJECT_REF>, igual ao postgres.<PROJECT_REF>)
--- Idempotente: rodar de novo só reaplica permissões (e redefine a senha).
+-- A SENHA É VOCÊ QUEM INVENTA (o usuário monitor_api está sendo criado agora).
+--   1. Gere uma senha forte, sem @ : / ? # (atrapalham a URL). No PowerShell:
+--        python -c "import secrets; print(secrets.token_urlsafe(24))"
+--   2. Copie este arquivo para o SQL Editor do Supabase e troque TROQUE_ESTA_SENHA
+--      SÓ LÁ, no editor. Não salve a senha neste arquivo (ele vai para o GitHub).
+--   3. Run. Guarde a senha: ela vai apenas no DATABASE_URL do Render:
+--      postgresql://monitor_api.<PROJECT_REF>:<SENHA>@<HOST>:5432/postgres
+--      <HOST> = o MESMO da DATABASE_URL do .env (aws-0-... ou aws-1-...: varia por projeto)
+--      (no pooler, o usuário leva o sufixo .<PROJECT_REF>, igual ao postgres.<PROJECT_REF>)
+--
+-- Rodar de novo (ex.: depois de recriar o schema) só reaplica as permissões: a senha
+-- definida na criação NÃO é alterada, então pode rodar o arquivo como está no repositório.
+-- Para trocar a senha depois:  alter role monitor_api password 'nova-senha';
 -- =====================================================================
 
-do $$ begin
+do $$
+declare
+  senha text := 'TROQUE_ESTA_SENHA';      -- <<< troque aqui, no SQL Editor, só na primeira vez
+begin
   if not exists (select 1 from pg_roles where rolname = 'monitor_api') then
-    create role monitor_api login password 'TROQUE_ESTA_SENHA';
+    if senha = 'TROQUE_ESTA_SENHA' or length(senha) < 16 then
+      raise exception 'Defina uma senha própria (16+ caracteres) na linha "senha text := ..." antes de rodar.';
+    end if;
+    execute format('create role monitor_api login password %L', senha);
+    raise notice 'usuário monitor_api criado';
   else
-    alter role monitor_api login password 'TROQUE_ESTA_SENHA';
+    raise notice 'monitor_api já existe: senha mantida, permissões reaplicadas';
   end if;
 end $$;
 

@@ -1,6 +1,5 @@
 # Camada 1 — Coleta: spec, passo a passo e roteiro de testes
 
-
 Versão do motor: `coleta-0.1.0` · schema `monitor` v0.2 · 12/10/2026
 
 A Camada 1 transforma `municipios.yaml` em **snapshots imutáveis** no Supabase: páginas HTML (estáticas ou renderizadas), arquivos (PDF, CSV, XLS/XLSX, ODS, JSON) e o que foi extraído deles. Ela **não julga conformidade** — só registra o que existe, onde estava, como se chegou lá e se a coleta foi confiável. A Camada 2 lê esses snapshots e decide.
@@ -65,7 +64,10 @@ Regra de ouro: **falha do robô nunca vira "Não atende"**.
 ### 1.4 Decisões de projeto
 
 - **Coleta orientada a objetivo, não espelho do site.** Orçamento padrão: 60 páginas, profundidade 3, 30 arquivos por ente; cada seção puxa a fila até 4 páginas e 3 arquivos. Links sem relação com nenhuma seção só são seguidos a partir da capa.
-- **Domínio próprio.** Segue links no domínio registrável do site oficial (`*.niteroi.rj.gov.br`), no host exato do portal (`japeri.geosiap.net.br`, e não `*.geosiap.net.br`) e em `dominios_extra`. e-SIC externo (Fala.BR) é visitado, mas não expandido.
+- **Escopo de navegação.** Segue links no domínio registrável do site oficial (`*.niteroi.rj.gov.br`), no host exato do portal — configurado **ou descoberto na capa** (`japeri.geosiap.net.br`, `transparencia.betha.cloud`, nunca `*.geosiap.net.br`) — e em `dominios_extra`. Canais em terceiros (Fala.BR, sistemas de ouvidoria de fornecedor) são visitados como semente, mas não expandidos.
+- **Orçamento reservado ao portal.** Duas filas: portal e demais hosts. Enquanto houver fila no portal, o site institucional usa no máximo `1 - COLETA_FRACAO_PORTAL` das páginas (padrão: metade). O relatório mostra a distribuição de páginas por host.
+- **Menus em JavaScript.** Links são recuperados de `href`, `onclick` (`window.open`, `location.href`), atributos `data-href`/`data-url` e `<select>` de navegação. Se uma página estática tiver 5 ou mais `<a>` sem destino, ela é renderizada; havendo mais links, o host passa a ser renderizado direto; sem ganho, não tenta de novo naquele host.
+- **Downloads sem extensão.** Links cujo texto ou URL sugere arquivo ("Baixar", "PDF", `/download?id=`) são baixados; a extensão vem do `Content-Disposition`, do `Content-Type` ou da assinatura do arquivo. Se a resposta for HTML, o link volta para a fila como página. Sem termo de seção no link, o arquivo herda as seções da página onde apareceu. Teto: 5 tentativas por página e 2 × `COLETA_MAX_ARQUIVOS` por ente.
 - **Rota de SPA é página.** `#/despesas` é mantido na URL canônica; `#topo` é descartado.
 - **Fornecedor vence assinatura genérica.** Betha também é "SPA com hash", mas o fingerprint específico tem precedência (`generica: true` no YAML).
 - **Mudança detectada pelo texto, não pelos bytes.** `extraido.texto_hash` (texto visível normalizado) define `inalterado`; o HTML bruto vai ao Storage por sha256, então repetir conteúdo não ocupa espaço.
@@ -135,7 +137,7 @@ Tempo de referência: com 1 req/s por domínio e 60 páginas, cada ente leva alg
 
 ### 2.3 Conferir
 
-O relatório sai no terminal e em `data/runs/<run_id>-relatorio.md`: status, distribuição ok/vazio/soft404/erro/robots, arquivos, renderizações e seções por ente, erros mais frequentes e os critérios de aceite. Para gerar de novo: `python -m ingestion.report` (ou `--run <id>`).
+O relatório sai no terminal e em `data/runs/<run_id>-relatorio.md`: status, distribuição ok/vazio/soft404/erro/robots, arquivos, renderizações e seções por ente, páginas por host (com o portal marcado), erros mais frequentes e os critérios de aceite. Para gerar de novo: `python -m ingestion.report` (ou `--run <id>`).
 
 No Supabase:
 
@@ -181,7 +183,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 python -m playwright install --with-deps chromium
 cp .env.example .env      # preencher na etapa 3
-pytest -q                 # 63 testes passam, 1 pulado (integração Postgres)
+pytest -q                 # 72 testes passam, 1 pulado (integração Postgres)
 ```
 
 ### Passo 2 — Primeira coleta sem banco
@@ -202,7 +204,7 @@ p[["url", "coleta_status", "secoes", "profundidade"]]
 
 1. SQL Editor → colar e executar `sql/schema.sql` inteiro. Se a v0.1 já foi aplicada, nada é apagado: só entram as colunas e views da seção 6.1. O bucket privado `snapshots` também é criado ali.
 2. Project Settings → Database → *Connection string* → **Session pooler** (porta 5432) em `DATABASE_URL`. O Transaction pooler (6543) também funciona — prepared statements já estão desligados.
-3. Project Settings → API Keys → `SUPABASE_URL` e a chave secreta (`sb_secret_...`) em `SUPABASE_SECRET_KEY`. A legada `service_role` ainda é aceita, também em `SUPABASE_SERVICE_KEY`.
+3. Project Settings → API Keys → `SUPABASE_URL` e a chave secreta (`sb_secret_...`) em `SUPABASE_SECRET_KEY`. A legada `service_role` também funciona na mesma variável.
 4. `python -m ingestion.pipeline --entes rj-marica --max-paginas 20` e conferir:
 
 ```sql
@@ -244,6 +246,7 @@ Rodar um ente por vez e ajustar só YAML:
 | `test_http_client.py` | UA identificado, robots bloqueia/override marca, retry com backoff em 503, `Retry-After`, 404 sem retry, timeout/DNS classificados, teto de bytes, 304, circuit breaker, taxa por domínio |
 | `test_discover_parse.py` | Fingerprint WordPress/GeoSiap/Betha/SPA, descoberta de portal/e-SIC/ouvidoria com divergência de config, extração completa de HTML (tabela, form, breadcrumb, acessibilidade, exportação), PDF de RREO (bimestre e período), CSV cp1252 com `;`, XLSX com título antes do cabeçalho, PDF corrompido não derruba |
 | `test_crawler_pipeline.py` | Município falso ponta a ponta: seções e trilha, não sai do domínio, ignora notícias, registra robots e link quebrado, baixa RREO e CSV, respeita orçamento, renderiza SPA, SPA sem Chromium vira `vazio`, override, duas rodadas incrementais (sem novo upload, PDF via 304), um ente fora do ar não derruba a rodada, Supabase Storage com duplicado |
+| `test_escopo_downloads.py` | Portal descoberto em outro host é expandido; canal externo não é; reserva de orçamento do portal; links de `onclick`/`data-href`/`<select>`; renderização por menu JavaScript e parada sem ganho; download sem extensão (Content-Disposition, Content-Type, assinatura), herança de seção e HTML devolvido à fila; relatório por host |
 | `test_execucao.py` | Sem Supabase o pipeline falha em vez de gravar local; relatório com critérios; reextração só refaz versão antiga, recalcula seções e preserva a evidência; sem HTML no Storage mantém a extração antiga; preflight detecta chave publicável, robots, TLS e testa o bucket |
 | `test_postgres_integration.py` | Schema v0.2 limpo aplicado 2× e v0.1 → v0.2 (o caminho do Supabase); pipeline grava run/job/snapshots/arquivos em `monitor`, mapeamento de tipos de URL, `texto`/`links` em colunas próprias, vigência sem duplicar na 2ª rodada, views (roda no CI) |
 
