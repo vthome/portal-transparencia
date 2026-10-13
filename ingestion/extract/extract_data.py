@@ -22,6 +22,7 @@ from ingestion.transform.normalize import host_of
 
 log = logging.getLogger(__name__)
 
+
 class RepoSink:
     """Implementa o `Sink` do crawler: grava bytes no Storage e metadados no repositório."""
 

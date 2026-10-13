@@ -2,12 +2,15 @@
 # - id: slug estável (chave primária no banco). Nunca reutilize um id para outro ente.
 # - urls: o que já se sabe. A descoberta completa o que faltar a partir da capa do site
 #   e registra divergências (ex.: link da capa aponta para outro portal).
+# - O crawler SEGUE links no domínio do site oficial, no host do portal da transparência
+#   e em `dominios_extra`. Canais em terceiros (Fala.BR, sistemas de fornecedor) são
+#   visitados como semente, mas não expandidos.
 # - robots_override: decisão de POLÍTICA, não técnica. Por padrão o robô respeita o
 #   robots.txt; um override só deve ser ativado com justificativa (a LAI obriga a
 #   publicação ativa) e fica gravado em cada snapshot coletado sob override.
 # - verificar_tls: false apenas se o portal usar cadeia ICP-Brasil não reconhecida;
 #   fica registrado no job.
-# Levantamento inicial: 09/10/2026 (Plano de Execução).
+# Levantamento inicial: 09/10/2026 (Plano de Execução). URLs revisadas em 12/10/2026.
 
 padroes:
   uf: RJ
@@ -83,7 +86,7 @@ entes:
     nome: Prefeitura Municipal de Cachoeiras de Macacu
     municipio: Cachoeiras de Macacu
     codigo_ibge: "3300803"
-    urls:       # portal_transparencia: Betha Cloud — URL do ente a confirmar; a descoberta procura na capa
+    urls:
       site_oficial: https://www.prefeituracachoeiras.com/   # domínio .com (Wix) — confirmar se é o oficial
       portal_transparencia: https://transparencia.betha.cloud/#/VZIcwd3tEQSz63QIK2HkQw==*
     robots_override:
