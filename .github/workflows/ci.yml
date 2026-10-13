@@ -22,7 +22,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - name: Lint
-        run: ruff check ingestion tests --select E,F,W,I --ignore E501
+        run: ruff check ingestion compliance scripts tests --select E,F,W,I --ignore E501,E741
       - name: Testes (unitários + integração Postgres)
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres

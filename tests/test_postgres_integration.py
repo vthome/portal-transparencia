@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration,
               pytest.mark.skipif(not DSN, reason="TEST_DATABASE_URL não definida")]
 
 RAIZ = Path(__file__).parent.parent
-V02 = (RAIZ / "sql" / "schema.sql").read_text(encoding="utf-8")
+V03 = (RAIZ / "sql" / "schema.sql").read_text(encoding="utf-8")
 
 
 def _v01_portavel() -> str:
@@ -43,15 +43,15 @@ def repo():
     from ingestion.load.load_postgres import PostgresRepository
 
     with psycopg.connect(DSN, autocommit=True) as c:
-        # 1) instalação limpa da v0.2, duas vezes (idempotência)
+        # 1) instalação limpa da v0.3, duas vezes (idempotência)
         c.execute("drop schema if exists monitor cascade")
-        c.execute(V02)
-        c.execute(V02)
+        c.execute(V03)
+        c.execute(V03)
         assert {"coleta_status", "trilha", "secoes", "extraido"} <= _colunas(c, "page_snapshot")
-        # 2) caminho real do Supabase: v0.1 já aplicada, depois v0.2 por cima
+        # 2) caminho real do Supabase: v0.1 já aplicada, depois v0.3 por cima
         c.execute("drop schema monitor cascade")
         c.execute(_v01_portavel())
-        c.execute(V02)
+        c.execute(V03)
         assert {"coleta_status", "trilha", "secoes", "extraido", "inalterado"} <= _colunas(c, "page_snapshot")
         assert {"entity_id", "secoes", "texto_link"} <= _colunas(c, "file_artifact")
         assert {"bloqueios_robots", "secoes_ausentes"} <= _colunas(c, "crawl_job")
@@ -106,3 +106,45 @@ def test_pipeline_grava_no_schema_monitor(repo, tmp_path):
     assert ult == (e.id, int(resumo2["run_id"]))
     saude = c.execute("select entes, parciais from monitor.v_saude_rodadas where run_id=%s", (rid,)).fetchone()
     assert saude == (1, 1)
+
+
+def test_conclusao_grava_avaliacao_e_embeddings_768(repo, tmp_path):
+    """Camada 2 sobre a última rodada: chunk vector(768), avaliação, resultados, evidências e reuso."""
+    from datetime import date
+
+    from compliance.pipeline import executar
+    from compliance.repo import PostgresConclusao
+    from ingestion.embeddings.generate_embeddings import HashEmbedder
+
+    c = repo.conn
+    assert c.execute("""select atttypmod from pg_attribute
+                        where attrelid='monitor.chunk'::regclass and attname='embedding'""").fetchone()[0] == 768
+    conc = PostgresConclusao(DSN)
+    rid = conc.latest_run_id()
+    settings = test_settings(data_dir=tmp_path)
+    res = executar(conc, rid, settings, HashEmbedder(768), data_ref=date(2026, 10, 12))
+    sc = res["entes"]["rj-teste-integracao"]
+    assert sum(sc["contagem"].values()) == 142 and res["embeddings"]["calculados"] > 0
+
+    ev = c.execute("""select ev.id, ev.score, ev.cobertura, ev.engine_version, ev.modelo_embedding
+                      from monitor.evaluation ev where ev.run_id=%s""", (int(rid),)).fetchall()
+    assert len(ev) == 1 and ev[0][3].startswith("conformidade-") and ev[0][4] == "hash-bow-768"
+    st = dict(c.execute("""select status::text, count(*) from monitor.criterion_result where evaluation_id=%s
+                           group by 1""", (ev[0][0],)))
+    assert sum(st.values()) == 142 and st.get("atende", 0) > 0
+    assert c.execute("""select count(*) from monitor.evidence e join monitor.criterion_result cr
+                        on cr.id=e.criterion_result_id where cr.evaluation_id=%s""", (ev[0][0],)).fetchone()[0] > 0
+    assert c.execute("select count(*) from monitor.v_resultado_atual").fetchone()[0] == 142
+    c.execute("set search_path = public, extensions")              # pgvector pode estar em qualquer um
+    assert c.execute("select vector_dims(embedding) from monitor.chunk limit 1").fetchone()[0] == 768
+
+    # reexecução: substitui a avaliação (não duplica) e não recalcula vetores
+    res2 = executar(conc, rid, settings, HashEmbedder(768), data_ref=date(2026, 10, 12))
+    assert res2["embeddings"]["trechos"] == 0
+    assert c.execute("select count(*) from monitor.evaluation where run_id=%s", (int(rid),)).fetchone()[0] == 1
+
+    # dimensão errada falha antes de gravar
+    from ingestion.embeddings.generate_embeddings import DimensaoIncompativel
+
+    with pytest.raises(DimensaoIncompativel):
+        executar(conc, rid, settings, HashEmbedder(384), data_ref=date(2026, 10, 12))
