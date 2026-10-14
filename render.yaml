@@ -16,6 +16,7 @@ services:
         - tests/**
         - dashboard/**
         - scripts/**
+        - servicos/**               # serviço de embeddings: tem deploy próprio
         - .github/**
         - "**/*.md"
     envVars:
@@ -29,7 +30,11 @@ services:
         sync: false
       - key: SUPABASE_BUCKET
         value: snapshots
-      - key: API_BUSCA              # texto (cabe no plano free) | modelo (SERAFIM, ~1,5 GB de RAM)
+      - key: API_BUSCA              # texto | remoto (consulta vetorizada no serviço de embeddings; cabe no free) | modelo (~1,5 GB)
         value: texto
+      - key: EMBEDDINGS_REMOTO_URL  # API_BUSCA=remoto: endereço do serviço (docs/06-busca-semantica-remota.md)
+        sync: false
+      - key: EMBEDDINGS_REMOTO_TOKEN  # o mesmo EMBEDDINGS_TOKEN configurado no serviço
+        sync: false
       - key: API_POOL_MAX
         value: "4"

@@ -11,7 +11,8 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("API", "✅ No ar" if h.get("status") == "ok" else "⚠️ Degradada", help=f"versão {h.get('versao')}")
 c2.metric("Banco", "✅ OK" if h.get("banco") == "ok" else f"⚠️ {h.get('banco')}")
 c3.metric("Última rodada", h.get("ultima_rodada") or "—")
-c4.metric("Busca", "Semântica" if h.get("busca") == "semantica" else "Por palavras")
+c4.metric("Busca", {"semantica": "Semântica", "semantica_remota": "Semântica (serviço externo)"}
+          .get(h.get("busca"), "Por palavras"))
 api = dados.api()
 st.link_button("Documentação da API (Swagger)", f"{api.base_url}/docs", icon=":material/api:")
 

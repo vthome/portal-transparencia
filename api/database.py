@@ -231,16 +231,60 @@ class Repo:
     _BUSCA_COLS = """c.id as trecho_id, e.slug, j.run_id, c.page_snapshot_id, c.file_artifact_id,
                      coalesce(p.url, f.url) as url, coalesce(p.titulo, f.texto_link) as titulo, c.texto"""
 
+    # Configuração de texto sem acento (schema v0.5). Se o banco ainda estiver na v0.4, a busca
+    # volta para 'portuguese' (com acento) em vez de falhar — o deploy da API pode chegar antes do SQL.
+    TS_SEM_ACENTO = "monitor.pt_sem_acento"
+    TS_LEGADO = "portuguese"
+    # Similaridade mínima da busca aproximada (0–1): "orcameto" × "orçamento" ≈ 0,7.
+    LIMIAR_APROXIMADA = 0.5
+
     def busca_texto(self, q: str, slug: str | None, k: int) -> list[dict[str, Any]]:
-        """Full-text em português sobre os trechos da coleta mais recente de cada ente."""
+        """Full-text em português, sem acento e sem diferenciar maiúsculas, sobre os trechos da
+        coleta mais recente de cada ente: "orcamento" encontra "Orçamento"."""
+        from psycopg import errors
+
+        try:
+            return self._busca_fts(self.TS_SEM_ACENTO, q, slug, k)
+        except errors.UndefinedObject:      # schema sem a v0.5 (configuração pt_sem_acento ausente)
+            log.warning("busca: monitor.pt_sem_acento não existe; rode o sql/schema.sql (v0.5)")
+            return self._busca_fts(self.TS_LEGADO, q, slug, k)
+
+    def _busca_fts(self, cfg: str, q: str, slug: str | None, k: int) -> list[dict[str, Any]]:
+        # `cfg` é uma das constantes acima (nunca vem do usuário) e entra como literal no SQL:
+        # assim a expressão casa exatamente com a do índice ix_chunk_fts_sem_acento.
+        assert cfg in (self.TS_SEM_ACENTO, self.TS_LEGADO)
+        tsv = f"to_tsvector('{cfg}'::regconfig, c.texto)"
+        tsq = f"websearch_to_tsquery('{cfg}'::regconfig, %(q)s)"
         return self._all(
-            f"""select {self._BUSCA_COLS},
-                       ts_rank(to_tsvector('portuguese', c.texto), websearch_to_tsquery('portuguese', %(q)s))::float8
-                         as relevancia
+            f"""select {self._BUSCA_COLS}, ts_rank({tsv}, {tsq})::float8 as relevancia
                 {self._BUSCA_BASE}
-                where to_tsvector('portuguese', c.texto) @@ websearch_to_tsquery('portuguese', %(q)s)
+                where {tsv} @@ {tsq}
                   and (%(slug)s::text is null or e.slug = %(slug)s::text)
                 order by relevancia desc, c.id limit %(k)s""", {"q": q, "slug": slug, "k": k})
+
+    def busca_aproximada(self, q: str, slug: str | None, k: int) -> list[dict[str, Any]]:
+        """Tolerante a erros de digitação ("orcameto", "licitacao" com letra trocada): similaridade de
+        trigramas (pg_trgm) entre a consulta e cada trecho, ambos sem acento e em minúsculas.
+        Chamada só quando a busca exata não acha nada. Sem a v0.5 do schema, devolve lista vazia."""
+        from psycopg import errors
+
+        try:
+            with self.pool.connection() as conn, conn.transaction():
+                # pg_trgm fica no schema extensions (Supabase) — mesmo cuidado de busca_vetor
+                conn.execute("set local search_path = monitor, public, extensions")
+                conn.execute(f"set local pg_trgm.word_similarity_threshold = {float(self.LIMIAR_APROXIMADA)}")
+                return conn.execute(
+                    f"""select {self._BUSCA_COLS},
+                               word_similarity(monitor.sem_acento(%(q)s), monitor.sem_acento(c.texto))::float8
+                                 as relevancia
+                        {self._BUSCA_BASE}
+                        where (%(slug)s::text is null or e.slug = %(slug)s::text)
+                          and monitor.sem_acento(%(q)s) <%% monitor.sem_acento(c.texto)
+                        order by relevancia desc, c.id limit %(k)s""",
+                    {"q": q, "slug": slug, "k": k}).fetchall()
+        except errors.UndefinedFunction:    # schema sem a v0.5 (função sem_acento ausente)
+            log.warning("busca aproximada indisponível; rode o sql/schema.sql (v0.5)")
+            return []
 
     def busca_vetor(self, vetor: str, modelo: str, slug: str | None, k: int) -> list[dict[str, Any]]:
         """Similaridade de cosseno (pgvector). `search_path` local: o pgvector pode estar em public ou extensions."""

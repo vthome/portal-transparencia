@@ -148,7 +148,12 @@ class FakeRepo:
                 {**base, "codigo": "2.1", "dimensao": "pessoal", "verificador": "x"}]
 
     def busca_texto(self, q, slug, k):
+        if q == "orcameto":                     # erro de digitação: a busca exata não acha nada
+            return []
         return [{"trecho_id": 1, "slug": "rj-teste", "run_id": 2, "texto": f"... {q} ...", "relevancia": 0.5}]
+
+    def busca_aproximada(self, q, slug, k):
+        return [{"trecho_id": 3, "slug": "rj-teste", "run_id": 2, "texto": "... orçamento ...", "relevancia": 0.7}]
 
     def busca_vetor(self, v, modelo, slug, k):
         assert v.startswith("[") and modelo == "hash-bow-768"
@@ -327,6 +332,12 @@ def test_busca_texto_e_semantica(cli, repo):
         b = c.get("/busca", params={"q": "creche"}).json()
         assert b["modo"] == "semantica" and b["modelo"] == "hash-bow-768"
         assert c.get("/busca", params={"q": "creche", "modo": "texto"}).json()["modo"] == "texto"
+
+
+def test_busca_aproximada_quando_texto_nao_acha(cli):
+    b = cli.get("/busca", params={"q": "orcameto"}).json()
+    assert b["modo"] == "aproximada" and b["resultados"][0]["texto"] == "... orçamento ..."
+    assert cli.get("/busca", params={"q": "orcamento"}).json()["modo"] == "texto"   # achou: sem fallback
 
 
 def test_link_assinado_e_storage_nao_configurado(cli, repo):

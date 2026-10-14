@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
         ([shutil.which("ruff")] if shutil.which("ruff") else None)
     if ruff:
         falhas += rodar("Lint", ruff + ["check", "ingestion", "compliance", "api", "dashboard", "scripts", "tests",
-                                        "--select", "E,F,W,I", "--ignore", "E501,E741"])
+                                        "servicos", "--select", "E,F,W,I", "--ignore", "E501,E741"])
     else:
         print(f"\n{AVISO} ruff não instalado — lint pulado (pip install ruff)")
     if not a.sem_testes:

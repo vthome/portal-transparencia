@@ -1,6 +1,7 @@
 """Dependências das rotas: repositório, autenticação por chave, embedder da busca e Storage."""
 from __future__ import annotations
 
+import logging
 import secrets
 import threading
 from typing import Annotated
@@ -9,6 +10,8 @@ from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 
 from api.config import ApiSettings, get_api_settings
+
+log = logging.getLogger("api.deps")
 
 chave_header = APIKeyHeader(name="X-API-Key", auto_error=False,
                             description="API_TOKEN_REVISAO para gravar revisões; API_TOKEN_LEITURA se configurado")
@@ -54,19 +57,31 @@ _embedder = None
 
 
 def get_embedder(s: Annotated[ApiSettings, Depends(get_settings)]):
-    """Carregado uma vez, na primeira busca. None => busca por texto (API_BUSCA=texto)."""
+    """Carregado uma vez, na primeira busca. None => busca por texto (API_BUSCA=texto).
+
+    `remoto`: a consulta é vetorizada no serviço externo (servicos/embeddings); sem URL ou token
+    configurados, a busca fica por texto e o motivo vai para o log."""
     global _embedder
-    if s.busca not in {"modelo", "hash"}:
+    if s.busca not in {"modelo", "hash", "remoto"}:
+        return None
+    if s.busca == "remoto" and not (s.embeddings_remoto_url and s.embeddings_remoto_token):
+        log.warning("API_BUSCA=remoto sem EMBEDDINGS_REMOTO_URL/EMBEDDINGS_REMOTO_TOKEN: busca por texto")
         return None
     with _emb_lock:
         if _embedder is None:
-            from ingestion.embeddings.generate_embeddings import (
-                HashEmbedder,
-                SentenceTransformerEmbedder,
-            )
+            if s.busca == "remoto":
+                from api.embedder_remoto import RemotoEmbedder
 
-            _embedder = HashEmbedder(s.embeddings_dim) if s.busca == "hash" else \
-                SentenceTransformerEmbedder(s.embeddings_modelo, s.embeddings_dim)
+                _embedder = RemotoEmbedder(s.embeddings_remoto_url, s.embeddings_remoto_token,
+                                           s.embeddings_modelo, s.embeddings_dim, s.embeddings_remoto_timeout_s)
+            else:
+                from ingestion.embeddings.generate_embeddings import (
+                    HashEmbedder,
+                    SentenceTransformerEmbedder,
+                )
+
+                _embedder = HashEmbedder(s.embeddings_dim) if s.busca == "hash" else \
+                    SentenceTransformerEmbedder(s.embeddings_modelo, s.embeddings_dim)
     return _embedder
 
 

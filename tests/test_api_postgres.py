@@ -215,6 +215,16 @@ def test_busca_semantica_e_texto(cli):
     assert cli.get("/busca", params={"q": "zzzqqqxxx", "modo": "texto"}).json()["resultados"] == []
 
 
+def test_busca_sem_acento_e_aproximada(cli):
+    """v0.5: acento e maiúsculas não importam; erro de digitação cai na busca aproximada."""
+    for q in ("licitacoes", "LICITAÇÕES", "Licitações"):
+        r = cli.get("/busca", params={"q": q, "modo": "texto", "ente": SLUG}).json()
+        assert r["modo"] == "texto" and any("Licita" in x["texto"] for x in r["resultados"]), q
+    r = cli.get("/busca", params={"q": "remuneracap", "modo": "texto", "ente": SLUG}).json()
+    assert r["modo"] == "aproximada" and any("Remunera" in x["texto"] for x in r["resultados"])
+    assert all(0 < x["relevancia"] <= 1 for x in r["resultados"])
+
+
 def test_monitoramento_e_checklist(cli, dados):
     rod = cli.get("/rodadas").json()
     assert [x["run_id"] for x in rod] == dados[::-1] and all(x["avaliacoes"] == 1 for x in rod)

@@ -270,6 +270,11 @@ def test_busca(cliente):
     sem_erros(at)
     assert any("busca por palavras" in c.value for c in at.caption)
     assert any("... creche ..." in c.value for c in at.caption)
+    at.text_input(key="busca_q").set_value("orcameto")
+    next(b for b in at.button if b.label == "Buscar").click().run()
+    sem_erros(at)
+    assert any("busca aproximada" in c.value for c in at.caption)
+    assert any("mais parecidos" in i.value for i in at.info)
 
 
 def test_monitoramento(cliente):
@@ -314,6 +319,9 @@ def test_paginas_sem_avaliacao(pagina):
             return []
 
         def busca_texto(self, *a):
+            return []
+
+        def busca_aproximada(self, *a):
             return []
 
     app = create_app(cfg(token_revisao=TOKEN), repo=Vazio())

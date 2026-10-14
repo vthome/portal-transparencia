@@ -26,8 +26,14 @@ class ApiSettings:
     token_leitura: str | None = field(default_factory=lambda: os.getenv("API_TOKEN_LEITURA") or None)
     cors_origins: list[str] = field(default_factory=lambda: _lista(os.getenv("API_CORS_ORIGINS")))
     # busca: "texto" (full-text do Postgres, leve — padrão no Render Free/Starter),
+    # "remoto" (consulta vetorizada no serviço servicos/embeddings; cabe no plano free),
     # "modelo" (SERAFIM carregado na API: precisa de ~1,5 GB de RAM) ou "hash" (testes)
     busca: str = field(default_factory=lambda: os.getenv("API_BUSCA", "texto").lower())
+    # API_BUSCA=remoto: endereço e token do serviço de embeddings (docs/06-busca-semantica-remota.md)
+    embeddings_remoto_url: str | None = field(default_factory=lambda: os.getenv("EMBEDDINGS_REMOTO_URL") or None)
+    embeddings_remoto_token: str | None = field(default_factory=lambda: os.getenv("EMBEDDINGS_REMOTO_TOKEN") or None)
+    embeddings_remoto_timeout_s: float = field(default_factory=lambda: float(
+        os.getenv("EMBEDDINGS_REMOTO_TIMEOUT_S", "20")))
     embeddings_modelo: str = field(default_factory=lambda: os.getenv(
         "EMBEDDINGS_MODELO", "PORTULAN/serafim-100m-portuguese-pt-sentence-encoder-ir"))
     embeddings_dim: int = field(default_factory=lambda: int(os.getenv("EMBEDDINGS_DIM", "768")))
