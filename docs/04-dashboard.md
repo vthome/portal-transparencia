@@ -16,7 +16,7 @@ Navegador ──► Streamlit Cloud (dashboard/app.py) ──HTTP──► API n
 | **Município** | Score, score revisado, cobertura, classificação e essenciais; score por dimensão; os 142 quesitos com filtros (situação, dimensão, essenciais, para revisar); detalhe do quesito com justificativa, evidências, cópias guardadas (screenshot/PDF) e revisões | `/entes/{slug}`, `/resultados/{id}`, `/evidencias/{id}/arquivo` |
 | **Evolução** | Score por rodada com a faixa; o que melhorou ou piorou entre duas rodadas; histórico de um quesito | `/historico`, `/diff`, `/timeline` |
 | **Revisão humana** | Fila de baixa confiança; formulário para gravar o veredito correto; concordância revisor × motor | `/revisoes/*` |
-| **Busca** | Busca nos textos coletados, com link para a página de origem | `/busca` |
+| **Busca** | Busca nos textos coletados, com link para a página de origem. Ignora acentos e maiúsculas (`orcamento` encontra "Orçamento") e, se não achar nada, mostra os trechos mais parecidos (erros de digitação). A busca por significado não está ativa na versão publicada — ver [06-busca-semantica-remota.md](06-busca-semantica-remota.md) | `/busca` |
 | **Monitoramento** | Saúde da API e das rodadas de coleta (falhas, páginas, seções ausentes); checklist em vigor | `/health`, `/rodadas`, `/checklist` |
 
 O município escolhido fica na URL (`?ente=rj-marica`), então dá para compartilhar o link direto de um município.

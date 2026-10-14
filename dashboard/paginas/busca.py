@@ -26,9 +26,14 @@ if len(q) < 3:
     st.stop()
 
 res = dados.carregar(dados.busca, q, ente or None, int(k), "auto", msg="Buscando…")
-modo = "semântica (por significado)" if res["modo"] == "semantica" else "por palavras"
+modo = {"semantica": "semântica (por significado)",
+        "aproximada": "aproximada (tolera erros de digitação)"}.get(res["modo"], "por palavras")
 st.caption(f"{len(res['resultados'])} resultado(s) · busca {modo}"
            + (f" · modelo {res['modelo']}" if res.get("modelo") else ""))
+if res.get("aviso"):
+    st.warning(res["aviso"], icon=":material/info:")
+if res["modo"] == "aproximada" and res["resultados"]:
+    st.info(f"Nada com “{q}” exatamente; mostrando os trechos mais parecidos.", icon=":material/spellcheck:")
 if not res["resultados"]:
     st.info("Nada encontrado. Tente outras palavras ou um sinônimo.", icon=":material/search_off:")
 for item in res["resultados"]:

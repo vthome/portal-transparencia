@@ -12,7 +12,7 @@ Streamlit Cloud ──HTTP──► FastAPI (Render) ──SQL──► Supabase
 
 ## 1. Antes do deploy (Supabase)
 
-1. **SQL Editor:** rode o `sql/schema.sql` de novo. A v0.4 cria o índice da busca por texto e o índice da fila de revisão, e não apaga dados.
+1. **SQL Editor:** rode o `sql/schema.sql` de novo. A v0.4 cria o índice da fila de revisão; a v0.5 deixa a busca por texto sem acento e tolerante a erros de digitação (extensão `unaccent`, configuração `monitor.pt_sem_acento`, função `monitor.sem_acento`). Nada é apagado, exceto o índice antigo `ix_chunk_fts`, substituído por `ix_chunk_fts_sem_acento`.
 2. **(Recomendado) Usuário só para a API:** o `sql/api_role.sql` cria o usuário `monitor_api`, que **lê** tudo e só **grava** em `human_review`. Delete, update e escrita em outras tabelas são bloqueados (há teste para isso).
    - **A senha é você quem inventa**, porque o usuário está sendo criado agora. Para gerar uma: `python -c "import secrets; print(secrets.token_urlsafe(24))"`. Ela só usa letras, números, `-` e `_`, então não quebra a URL.
    - Cole o arquivo no SQL Editor e troque `TROQUE_ESTA_SENHA` **só lá**, na linha `senha text := ...`. **Não salve a senha no arquivo:** ele vai para o GitHub. A senha fica apenas no `DATABASE_URL` do Render e no seu gerenciador de senhas.
@@ -112,12 +112,17 @@ curl -X POST https://.../revisoes -H "X-API-Key: $TOKEN" -H "Content-Type: appli
 
 ## 6. Busca
 
-| `API_BUSCA` | Como funciona | Onde roda |
-| --- | --- | --- |
-| `texto` (padrão) | full-text em português do Postgres (`websearch_to_tsquery`, índice GIN) | qualquer plano, inclusive o free |
-| `modelo` | a API carrega o SERAFIM e busca por similaridade no pgvector (mesmos vetores da Camada 2) | ~1,5 GB de RAM: instância Standard ou maior, com `sentence-transformers` e `torch` (CPU) no build |
+| `API_BUSCA` | Como funciona | Onde roda | Na PoC |
+| --- | --- | --- | --- |
+| `texto` (padrão) | full-text em português do Postgres (`websearch_to_tsquery`, índice GIN), **sem acento e sem diferenciar maiúsculas**; se não achar nada, busca **aproximada** por trigramas (`pg_trgm`), que tolera erros de digitação | qualquer plano, inclusive o free | ✅ em uso no Render |
+| `remoto` | a consulta é vetorizada no serviço de embeddings (`servicos/embeddings`) e comparada no pgvector; se o serviço falhar, cai para `texto` com aviso | API no plano free; o serviço precisa de ~2 GB (ex.: Cloud Run) | ⏸️ preparado, não ativado (sem host para o serviço) |
+| `modelo` | a API carrega o SERAFIM e busca por similaridade no pgvector (mesmos vetores da Camada 2) | ~1,5 GB de RAM: instância Standard ou maior, com `sentence-transformers` e `torch` (CPU) no build | só localmente (demonstração) |
 
-A resposta informa o `modo` usado. Com `modo=semantica` e o modelo desligado, a API responde 409.
+A resposta informa o `modo` usado: `semantica`, `texto` ou `aproximada`, e traz `aviso` quando a busca semântica estava configurada mas indisponível. Com `modo=semantica` e o modelo desligado, a API responde 409.
+
+**Por que a busca semântica não está ativa na versão publicada:** a consulta precisa ser vetorizada com o mesmo modelo dos trechos (SERAFIM), que exige ~1,5 GB de memória; o Render gratuito tem 512 MB. A solução proposta — um serviço externo de inferência só para vetorizar a consulta — está com o código pronto, mas não foi publicada porque exige um host com ~2 GB (ex.: Cloud Run, que pede conta de faturamento). Os embeddings continuam em uso no motor de conformidade (verificador semântico). Detalhes e passo a passo de ativação em [06-busca-semantica-remota.md](06-busca-semantica-remota.md).
+
+**Acentos e erros de digitação (schema v0.5).** A configuração `monitor.pt_sem_acento` tira os acentos *antes* do radical em português, então `orçamento`, `Orçamento`, `ORCAMENTO` e `orcamento` viram o mesmo termo e encontram os mesmos trechos. Quando a busca exata não acha nada (ex.: `orcameto`), a API compara a consulta com cada trecho por similaridade de trigramas (`word_similarity`, limiar 0,5, ambos sem acento) e responde com `modo=aproximada`; o dashboard avisa que está mostrando os trechos mais parecidos. Se o banco ainda estiver na v0.4, a API continua funcionando com a busca antiga (com acento) e registra um aviso no log.
 
 ## 7. Testes
 

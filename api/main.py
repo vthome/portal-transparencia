@@ -100,7 +100,9 @@ def create_app(settings: ApiSettings | None = None, repo=None) -> FastAPI:
              responses={503: {"description": "banco indisponível"}})
     def health(request: Request, cfg: ApiSettings = Depends(get_settings)):
         r = getattr(request.app.state, "repo", None)
-        base = {"versao": __version__, "busca": "semantica" if cfg.busca in {"modelo", "hash"} else "texto"}
+        remota = cfg.busca == "remoto" and bool(cfg.embeddings_remoto_url and cfg.embeddings_remoto_token)
+        base = {"versao": __version__,
+                "busca": "semantica" if cfg.busca in {"modelo", "hash"} else "semantica_remota" if remota else "texto"}
         if r is None:
             return JSONResponse({**base, "status": "degradado", "banco": "não configurado"}, status_code=503)
         try:

@@ -207,6 +207,7 @@ class ItemBusca(BaseModel):
 
 class Busca(BaseModel):
     consulta: str
-    modo: Literal["semantica", "texto"]
+    modo: Literal["semantica", "texto", "aproximada"]
     modelo: str | None = None
+    aviso: str | None = None          # ex.: busca por significado indisponível, caiu para a busca por palavras
     resultados: list[ItemBusca]
