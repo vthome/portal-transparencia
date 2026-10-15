@@ -1,0 +1,5 @@
+# Serviço de embeddings (busca semântica). O torch CPU é instalado antes, no Dockerfile.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+sentence-transformers>=3.0

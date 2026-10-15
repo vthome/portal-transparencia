@@ -15,7 +15,14 @@ jobs:
     timeout-minutes: 10
     env:
       API_URL: ${{ vars.API_URL }}    # Settings → Secrets and variables → Actions → Variables
+      EMBEDDINGS_URL: ${{ vars.EMBEDDINGS_REMOTO_URL }}   # opcional: serviço de embeddings (busca semântica)
     steps:
+      - name: Acordar o serviço de embeddings (se configurado)
+        if: env.EMBEDDINGS_URL != ''
+        continue-on-error: true       # serviço fora do ar não reprova a API: a busca cai para palavras
+        run: |
+          curl -sS -m 90 --retry 2 --retry-delay 5 "$EMBEDDINGS_URL/health" | tee embeddings.txt
+          echo "### Serviço de embeddings: $(cat embeddings.txt)" >> "$GITHUB_STEP_SUMMARY"
       - name: API_URL configurada?
         id: cfg
         run: |

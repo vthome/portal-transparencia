@@ -1,5 +1,5 @@
 -- =====================================================================
--- Monitor de Conformidade de Portais da Transparência — schema v0.4
+-- Monitor de Conformidade de Portais da Transparência — schema v0.5
 -- Rodar inteiro no Supabase: SQL Editor > New query > colar > Run.
 -- Idempotente: pode ser executado de novo sem erro e sem apagar dados.
 --
@@ -10,6 +10,8 @@
 --       Quem já rodou a v0.1/v0.2 só precisa rodar este arquivo de novo.
 -- v0.4  seção 6.3: Camada 3 — índices da busca por texto e da fila de revisão (API).
 --       Usuário restrito para a API: sql/api_role.sql (opcional, recomendado).
+-- v0.5  seção 6.4: busca sem acento ("orcamento" encontra "orçamento") e tolerante a
+--       erros de digitação (unaccent + pg_trgm). Substitui o índice ix_chunk_fts da v0.4.
 --
 -- Também roda em Postgres puro com pgvector (CI): os trechos exclusivos do
 -- Supabase (roles anon/authenticated, storage.buckets) são condicionais.
@@ -415,11 +417,53 @@ join monitor.criterion c on c.id = cr.criterion_id;
 -- =====================================================================
 -- 6.3 v0.4 — Camada 3 (API)
 -- =====================================================================
--- Busca por texto da API (GET /busca?modo=texto): full-text em português sobre os trechos.
-create index if not exists ix_chunk_fts on monitor.chunk
-  using gin (to_tsvector('portuguese', texto));
+-- O índice da busca por texto (ix_chunk_fts, com acento) foi substituído na v0.5 (seção 6.4).
 -- Fila de revisão e "último veredito do revisor" por resultado
 create index if not exists ix_review_resultado on monitor.human_review (criterion_result_id, revisado_em desc);
+
+-- =====================================================================
+-- 6.4 v0.5 — Busca sem acento e tolerante a erros de digitação
+-- =====================================================================
+-- Antes: 'portuguese' mantinha os acentos, então "orcamento" não encontrava "orçamento".
+-- Agora a configuração monitor.pt_sem_acento tira acentos (unaccent) ANTES do radical em
+-- português: "orçamento", "Orçamento", "ORCAMENTO" e "orcamento" viram o mesmo lexema.
+-- Erros de digitação ("orcameto") ficam com a busca aproximada da API (pg_trgm), que só
+-- roda quando a busca exata não acha nada.
+
+create extension if not exists unaccent with schema extensions;
+ 
+do $v05$
+declare esq text;
+begin
+  -- a extensão pode já existir em outro schema (ex.: public); usa o schema em que ela está
+  select n.nspname into esq
+    from pg_extension x join pg_namespace n on n.oid = x.extnamespace where x.extname = 'unaccent';
+ 
+  -- Minúsculas e sem acento. IMMUTABLE (exigência de índice) fixando o dicionário pelo schema.
+  -- O corpo da função é montado com format() e entra como literal (%L): sem aspas $...$ aninhadas.
+  execute format(
+    'create or replace function monitor.sem_acento(t text) returns text '
+    'language sql immutable strict parallel safe as %L',
+    format('select %I.unaccent(%L::regdictionary, lower(t))', esq, quote_ident(esq) || '.unaccent'));
+ 
+  if not exists (select 1 from pg_ts_config c join pg_namespace n on n.oid = c.cfgnamespace
+                  where n.nspname = 'monitor' and c.cfgname = 'pt_sem_acento') then
+    create text search configuration monitor.pt_sem_acento (copy = pg_catalog.portuguese);
+  end if;
+  execute format('alter text search configuration monitor.pt_sem_acento
+                    alter mapping for hword, hword_part, word with %I.unaccent, portuguese_stem', esq);
+ 
+  -- a API (usuário restrito, sql/api_role.sql) precisa chamar a função na busca aproximada
+  if exists (select 1 from pg_roles where rolname = 'monitor_api') then
+    grant execute on function monitor.sem_acento(text) to monitor_api;
+  end if;
+end $v05$;
+ 
+-- Índice da busca por texto (GET /busca?modo=texto), agora sem acento. O da v0.4 sai,
+-- para não ocupar espaço à toa no plano gratuito.
+create index if not exists ix_chunk_fts_sem_acento on monitor.chunk
+  using gin (to_tsvector('monitor.pt_sem_acento'::regconfig, texto));
+drop index if exists monitor.ix_chunk_fts;
 
 -- ---------- 7. Segurança ----------
 -- RLS ligado em tudo e SEM políticas: só o backend (conexão Postgres / chave secreta)

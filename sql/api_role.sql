@@ -47,6 +47,8 @@ end $$;
 grant select on all tables in schema monitor to monitor_api;          -- tabelas e views
 alter default privileges in schema monitor grant select on tables to monitor_api;
 grant insert on monitor.human_review to monitor_api;
+-- v0.5: função monitor.sem_acento (busca sem acento e aproximada). Sem ela no banco, nada a fazer.
+grant execute on all functions in schema monitor to monitor_api;
 
 -- O schema liga RLS em todas as tabelas sem políticas (só o dono enxerga).
 -- Políticas explícitas para este usuário: lê tudo, insere só revisões.
