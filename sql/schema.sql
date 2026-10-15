@@ -429,36 +429,35 @@ create index if not exists ix_review_resultado on monitor.human_review (criterio
 -- português: "orçamento", "Orçamento", "ORCAMENTO" e "orcamento" viram o mesmo lexema.
 -- Erros de digitação ("orcameto") ficam com a busca aproximada da API (pg_trgm), que só
 -- roda quando a busca exata não acha nada.
-
 create extension if not exists unaccent with schema extensions;
- 
+
 do $v05$
 declare esq text;
 begin
   -- a extensão pode já existir em outro schema (ex.: public); usa o schema em que ela está
   select n.nspname into esq
     from pg_extension x join pg_namespace n on n.oid = x.extnamespace where x.extname = 'unaccent';
- 
+
   -- Minúsculas e sem acento. IMMUTABLE (exigência de índice) fixando o dicionário pelo schema.
   -- O corpo da função é montado com format() e entra como literal (%L): sem aspas $...$ aninhadas.
   execute format(
     'create or replace function monitor.sem_acento(t text) returns text '
     'language sql immutable strict parallel safe as %L',
     format('select %I.unaccent(%L::regdictionary, lower(t))', esq, quote_ident(esq) || '.unaccent'));
- 
+
   if not exists (select 1 from pg_ts_config c join pg_namespace n on n.oid = c.cfgnamespace
                   where n.nspname = 'monitor' and c.cfgname = 'pt_sem_acento') then
     create text search configuration monitor.pt_sem_acento (copy = pg_catalog.portuguese);
   end if;
   execute format('alter text search configuration monitor.pt_sem_acento
                     alter mapping for hword, hword_part, word with %I.unaccent, portuguese_stem', esq);
- 
+
   -- a API (usuário restrito, sql/api_role.sql) precisa chamar a função na busca aproximada
   if exists (select 1 from pg_roles where rolname = 'monitor_api') then
     grant execute on function monitor.sem_acento(text) to monitor_api;
   end if;
 end $v05$;
- 
+
 -- Índice da busca por texto (GET /busca?modo=texto), agora sem acento. O da v0.4 sai,
 -- para não ocupar espaço à toa no plano gratuito.
 create index if not exists ix_chunk_fts_sem_acento on monitor.chunk
