@@ -2,9 +2,9 @@ name: Coleta agendada
 # Camada 1. Ao terminar com sucesso, dispara o workflow "Conclusão" (Camada 2).
 on:
   schedule:
-    # todos os dias às 07:00 em Brasília (10:00 UTC; o Brasil não tem horário de verão).
+    # todos os dias às 11:00 em Brasília (14:00 UTC; o Brasil não tem horário de verão).
     # O cron do GitHub é em UTC e pode começar alguns minutos (até ~1 h em pico) depois.
-    - cron: "0 10 * * *"
+    - cron: "0 14 * * *"
   workflow_dispatch:
     inputs:
       entes:

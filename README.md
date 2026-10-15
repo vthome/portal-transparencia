@@ -19,6 +19,8 @@ Coleta e conclusão são separadas: regras novas reavaliam snapshots antigos sem
 | 3. API (FastAPI · Render) | implementada — [docs/03-api.md](docs/03-api.md) |
 | 3. Dashboard (Streamlit Cloud) | implementado — [docs/04-dashboard.md](docs/04-dashboard.md) |
 | Agendamento e CI (GitHub Actions) | implementado — [docs/05-operacao.md](docs/05-operacao.md) |
+| Busca nos textos (sem acento + tolerante a erros de digitação) | implementada — [docs/06-busca-semantica-remota.md](docs/06-busca-semantica-remota.md) |
+| Busca semântica na versão publicada (serviço externo de embeddings) | preparada, não ativada: exige host com ~2 GB (ex.: Cloud Run) — [docs/06-busca-semantica-remota.md](docs/06-busca-semantica-remota.md) |
 
 ## Rodando
 
@@ -42,7 +44,7 @@ pip install -r requirements-ml.txt     # sentence-transformers (PyTorch); ver do
 python -m compliance.pipeline --sem-embeddings   # só regras, sem modelo
 python -m compliance.calibrar          # recalibra a confiança com as revisões humanas (≥ 30)
 
-# API (Camada 3) — reaplique sql/schema.sql (v0.4); deploy no Render pelo render.yaml
+# API (Camada 3) — reaplique sql/schema.sql (v0.5); deploy no Render pelo render.yaml
 .\scripts\api.ps1                     # http://127.0.0.1:8000/docs
 python scripts/testar_api.py --url https://<seu-servico>.onrender.com
 
@@ -73,12 +75,13 @@ api/
   routers/       entes, indicadores, avaliacoes, revisoes, documentos, monitoramento
 scripts/         coleta, conclusao, api, dashboard (.ps1/.sh), testar_api.py, importar_checklist.py
 .streamlit/      config.toml, secrets.toml.example
-sql/schema.sql   schema `monitor` v0.4 (v0.1 + coleta + Camada 2 + índices da API)
+sql/schema.sql   schema `monitor` v0.5 (v0.1 + coleta + Camada 2 + índices da API + busca sem acento)
 sql/api_role.sql usuário restrito para a API (lê tudo, grava só revisões)
 render.yaml      Blueprint do Render (API) · requirements-api.txt · .python-version
+servicos/embeddings/ serviço que vetoriza a consulta da busca semântica (contêiner; preparado, não publicado na PoC)
 tests/           offline (site falso) + integração Postgres no CI
-.github/workflows/ ci.yml (cada push), coleta.yml (diária, 07:00), conclusao.yml (após cada coleta), saude.yml (dias úteis)
-docs/01-coleta.md … docs/05-operacao.md
+.github/workflows/ ci.yml (cada push), coleta.yml (diária, 11:00), conclusao.yml (após cada coleta), saude.yml (dias úteis)
+docs/01-coleta.md … docs/06-busca-semantica-remota.md
 ```
 
 ## Política de coleta
