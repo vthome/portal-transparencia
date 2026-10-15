@@ -80,7 +80,7 @@ sql/api_role.sql usuário restrito para a API (lê tudo, grava só revisões)
 render.yaml      Blueprint do Render (API) · requirements-api.txt · .python-version
 servicos/embeddings/ serviço que vetoriza a consulta da busca semântica (contêiner; preparado, não publicado na PoC)
 tests/           offline (site falso) + integração Postgres no CI
-.github/workflows/ ci.yml (cada push), coleta.yml (diária, 07:00), conclusao.yml (após cada coleta), saude.yml (dias úteis)
+.github/workflows/ ci.yml (cada push), coleta.yml (diária, 11:00), conclusao.yml (após cada coleta), saude.yml (dias úteis)
 docs/01-coleta.md … docs/06-busca-semantica-remota.md
 ```
 

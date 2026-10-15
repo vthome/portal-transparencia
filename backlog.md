@@ -7,7 +7,7 @@
 - Camada 2 (conclusão): schema v0.3 (`vector(768)`), embeddings SERAFIM 768 com reuso e gravação retomável, 142 quesitos / 13 verificadores, confiança calibrável, score em dois níveis com faixa min–max. Ver `claude/02-conclusao.md`.
 - Camada 3 (API): FastAPI com 20 rotas, `render.yaml`, usuário restrito `sql/api_role.sql`, schema v0.4. Publicada no Render. Ver `claude/03-api.md`.
 - Camada 3 (dashboard): Streamlit com 6 páginas, só via API; testado com AppTest. Publicado no Streamlit Cloud. Ver `claude/04-dashboard.md`.
-- Agendamento e CI (GitHub Actions): CI a cada push (qualidade + testes com Postgres/pgvector efêmero), coleta diária às 07:00, conclusão após cada coleta bem-sucedida, teste de saúde da API nos dias úteis; `scripts/verificar.py` antes do push. Ver `claude/05-operacao.md`.
+- Agendamento e CI (GitHub Actions): CI a cada push (qualidade + testes com Postgres/pgvector efêmero), coleta diária às 11:00, conclusão após cada coleta bem-sucedida, teste de saúde da API nos dias úteis; `scripts/verificar.py` antes do push. Ver `claude/05-operacao.md`.
 - Busca nos textos (schema v0.5, 14/10/2026): sem acento e sem maiúsculas (`unaccent` + configuração `monitor.pt_sem_acento`; "orcamento" encontra "Orçamento") e busca aproximada por trigramas quando a exata não acha nada (erros de digitação, `modo=aproximada`). Ver `claude/06-busca.md`.
 
 ## Pendente

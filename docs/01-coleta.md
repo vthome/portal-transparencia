@@ -218,7 +218,7 @@ Settings → Secrets and variables → Actions:
 - Secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`
 - Variable: `CRAWLER_USER_AGENT` com URL do repositório e um e-mail de contato
 
-`ci.yml` roda lint + testes a cada push (com Postgres + pgvector efêmero para o teste de integração). `coleta.yml` roda todos os dias às 07:00 (Brasília) e por *Run workflow* manual; ao terminar, dispara a conclusão (`conclusao.yml`). Ver docs/05-operacao.md.
+`ci.yml` roda lint + testes a cada push (com Postgres + pgvector efêmero para o teste de integração). `coleta.yml` roda todos os dias às 11:00 (Brasília) e por *Run workflow* manual; ao terminar, dispara a conclusão (`conclusao.yml`). Ver docs/05-operacao.md.
 
 ### Passo 5 — Decisão de robots.txt (Itaboraí, Japeri, Cachoeiras)
 

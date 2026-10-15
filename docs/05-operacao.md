@@ -5,12 +5,12 @@ Todo o ciclo roda de graça no GitHub Actions. Em repositório público, os minu
 | Workflow | Arquivo | Quando roda | O que faz |
 |---|---|---|---|
 | **CI** | `ci.yml` | a cada push e pull request, e manual | Sintaxe, formatos YAML/TOML/JSON e lint. Depois, todos os testes (unitários, Postgres + pgvector efêmero, API e dashboard), com resumo das falhas na página do job |
-| **Coleta agendada** | `coleta.yml` | **todos os dias às 07:00** (Brasília), e manual | Camada 1: preflight, coleta e extração dos 7 municípios, gravando no Supabase |
+| **Coleta agendada** | `coleta.yml` | **todos os dias às 11:00** (Brasília), e manual | Camada 1: preflight, coleta e extração dos 7 municípios, gravando no Supabase |
 | **Conclusão** | `conclusao.yml` | **logo após cada coleta bem-sucedida**, e manual | Camada 2: embeddings (SERAFIM 768), conformidade e score da rodada nova |
 | **Saúde da API** | `saude.yml` | **dias úteis** ~07:37 (Brasília), e manual | Teste de fumaça da API publicada no Render. Também acorda a API do plano free antes do expediente |
 
 ```
-diário 07:00   ─► Coleta ─(sucesso)─► Conclusão ─► Supabase ─► API (Render) ─► Dashboard (Streamlit)
+diário 11:00   ─► Coleta ─(sucesso)─► Conclusão ─► Supabase ─► API (Render) ─► Dashboard (Streamlit)
 dias úteis 07:37 ─► Saúde da API  (falhou? o GitHub avisa por e-mail)
 cada push ───────► CI (lint + testes)
 ```
@@ -52,7 +52,7 @@ Cada job deixa o relatório no **resumo** (a página da execução) e como **art
 
 ## Limites do GitHub para saber
 
-- O cron é em **UTC** e pode atrasar de minutos a cerca de 1 hora em horários de pico. A coleta está marcada para 10:00 UTC = 07:00 em Brasília.
+- O cron é em **UTC** e pode atrasar de minutos a cerca de 1 hora em horários de pico. A coleta está marcada para 14:00 UTC = 11:00 em Brasília.
 - **Espaço no Supabase (plano free: 500 MB de banco):** cada rodada guarda o texto das páginas coletadas. Com coleta diária, acompanhe em Supabase → Database → **Database size**; os trechos de embeddings já são podados (ficam só as 2 últimas rodadas).
 - Em repositório **sem nenhum commit por 60 dias**, o GitHub **desliga os agendamentos** e avisa por e-mail. Para religar: Actions → workflow → **Enable workflow**.
 - A Conclusão só é disparada automaticamente pela Coleta que roda no **branch padrão** (`main`).

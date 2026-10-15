@@ -7,10 +7,16 @@ verificadores da Camada 2: links (navegação), tabelas (dados estruturados), fo
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from bs4 import BeautifulSoup, Tag
+
+try:  # bs4 >= 4.11
+    from bs4 import XMLParsedAsHTMLWarning
+except ImportError:  # pragma: no cover - versões antigas não emitem o aviso
+    XMLParsedAsHTMLWarning = None
 
 from ingestion.transform.normalize import (
     extension_of,
@@ -19,6 +25,13 @@ from ingestion.transform.normalize import (
     normalize_url,
     parse_dates_br,
 )
+
+# Alguns portais devolvem XHTML com declaração <?xml ...?> (ou feeds/sitemaps) numa URL de página.
+# A extração precisa do parser HTML (links, tabelas, formulários), então o aviso do BeautifulSoup
+# sugerindo um parser XML é só ruído no log. Filtro no nível do módulo (e não com
+# warnings.catch_warnings, que não é seguro entre as threads do crawler).
+if XMLParsedAsHTMLWarning is not None:
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 ARQUIVO_EXT = {"pdf", "csv", "xls", "xlsx", "ods", "json", "xml", "zip", "txt", "doc", "docx", "odt"}
 MAX_TEXTO = 50_000
